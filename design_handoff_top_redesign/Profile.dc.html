@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;family=JetBrains+Mono:wght@400;500&amp;family=Architects+Daughter&amp;display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  html { scroll-behavior: smooth; scroll-padding-top: 86px; cursor: url('assets/cursor-pen.png') 5 38, auto; }
+  body { margin: 0; background: #fbfbfe; color: #4a5070; font-family: 'Zen Kaku Gothic New','Quicksand',sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: #4f5ac7; text-decoration: none; cursor: url('assets/cursor-pen.png') 5 38, pointer; transition: color .2s ease, background-color .2s ease, border-color .2s ease; }
+  a:hover { color: #7c86e8; }
+  button { font-family: inherit; cursor: url('assets/cursor-pen.png') 5 38, pointer; }
+  ::selection { background: #dde1fa; }
+  :focus-visible { outline: 2px solid #7c86e8; outline-offset: 3px; border-radius: 4px; }
+  @keyframes riseIn { from { transform: translateY(105%); } to { transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes cueDrop { 0%,100% { transform: translateY(0); opacity: .35; } 50% { transform: translateY(9px); opacity: 1; } }
+  @keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes skillsScroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+  @keyframes skillsScrollRev { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .marquee-track, .skills-track { animation: none !important; } }
+  @keyframes maskWipe { 0% { transform: translateX(-102%); } 45%, 58% { transform: translateX(0%); } 100% { transform: translateX(102%); } }
+  .mask-wipe { position: absolute; inset: 0; background: linear-gradient(100deg, #b9c0ee, #a3abe6); transform: translateX(-102%); z-index: 2; }
+  .mask-wipe.run { animation: maskWipe 1.15s cubic-bezier(.65,0,.35,1) forwards; }
+  @keyframes maskTextIn { 0%, 44% { opacity: 0; } 46%, 100% { opacity: 1; } }
+  .mask-host > h2 { opacity: 0; }
+  .marquee-wrap:hover .marquee-track { animation-duration: 95s; }
+  .skills-col:hover .skills-track { animation-play-state: paused; }
+  .skill-card { transition: transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s ease, border-color .45s ease; }
+  .skill-card:hover { transform: scale(1.03); box-shadow: 0 22px 46px -26px rgba(79,90,199,.45); border-color: rgba(85,96,206,.45); }
+  .skill-detail { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .45s cubic-bezier(.2,.8,.2,1), opacity .35s ease; }
+  .skill-detail > div { overflow: hidden; }
+  .skill-card:hover .skill-detail { grid-template-rows: 1fr; opacity: 1; }
+  .wk-shot-inner { transition: transform 2.4s cubic-bezier(.4,0,.2,1); }
+  .wk-card:hover .wk-shot-inner { transform: translateY(-46%); }
+  @keyframes barGrow { from { width: 0%; } to { width: 100%; } }
+  .tl-grid:hover .tl-step { opacity: .45; }
+  .tl-grid .tl-step:hover { opacity: 1; }
+  .tl-step:hover .tl-dot { transform: scale(1.9); background: #5560ce; border-color: #5560ce; }
+  .next-cue:hover .next-arrow { transform: translateY(7px); background: #f2f4fe; }
+  .sec-nav { position: fixed; right: 22px; top: 50%; transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 15px; }
+  @media (max-width: 1080px) { .sec-nav { display: none; } }
+  .mw-line { display: block; position: relative; overflow: hidden; }
+  .mw-txt { display: block; opacity: 0; animation: maskTextIn 1.15s cubic-bezier(.65,0,.35,1) both; }
+  @media (prefers-reduced-motion: reduce) { .mw-txt { opacity: 1; animation: none; } }
+  .mask-host.run > h2 { animation: maskTextIn 1.15s cubic-bezier(.65,0,.35,1) forwards; }
+  @media (prefers-reduced-motion: reduce) { .mask-wipe { display: none; } .mask-host > h2 { opacity: 1; } }
+</style>
+</helmet>
+
+<canvas ref="{{ canvasRef }}" aria-hidden="true" style="position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; filter: blur(14px) saturate(1.25);"></canvas>
+
+<sc-if value="{{ showGrid }}" hint-placeholder-val="{{ true }}">
+  <div aria-hidden="true" style="position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: repeating-linear-gradient(to right, rgba(85,96,206,.055) 0 1px, transparent 1px 80px), repeating-linear-gradient(to bottom, rgba(85,96,206,.045) 0 1px, transparent 1px 80px);"></div>
+</sc-if>
+
+<nav class="sec-nav" aria-label="セクション">
+  <a href="#profile" style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-family: 'JetBrains Mono',monospace; font-size: 10.5px; letter-spacing: .16em; {{ navStyle0 }}">
+    <span>01</span>
+    <span style="{{ navLabel0 }}">PROFILE</span>
+    <span aria-hidden="true" style="display: block; height: 1px; background: currentColor; {{ navBar0 }}"></span>
+  </a>
+  <a href="#skills" style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-family: 'JetBrains Mono',monospace; font-size: 10.5px; letter-spacing: .16em; {{ navStyle1 }}">
+    <span>02</span>
+    <span style="{{ navLabel1 }}">SKILLS</span>
+    <span aria-hidden="true" style="display: block; height: 1px; background: currentColor; {{ navBar1 }}"></span>
+  </a>
+  <a href="#works" style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-family: 'JetBrains Mono',monospace; font-size: 10.5px; letter-spacing: .16em; {{ navStyle2 }}">
+    <span>03</span>
+    <span style="{{ navLabel2 }}">WORKS</span>
+    <span aria-hidden="true" style="display: block; height: 1px; background: currentColor; {{ navBar2 }}"></span>
+  </a>
+  <a href="#news" style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-family: 'JetBrains Mono',monospace; font-size: 10.5px; letter-spacing: .16em; {{ navStyle3 }}">
+    <span>04</span>
+    <span style="{{ navLabel3 }}">NEWS</span>
+    <span aria-hidden="true" style="display: block; height: 1px; background: currentColor; {{ navBar3 }}"></span>
+  </a>
+  <a href="#contact" style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-family: 'JetBrains Mono',monospace; font-size: 10.5px; letter-spacing: .16em; {{ navStyle4 }}">
+    <span>05</span>
+    <span style="{{ navLabel4 }}">CONTACT</span>
+    <span aria-hidden="true" style="display: block; height: 1px; background: currentColor; {{ navBar4 }}"></span>
+  </a>
+</nav>
+
+<header style="position: sticky; top: 0; z-index: 20; background: rgba(251,251,254,.86); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(85,96,206,.16);">
+  <div style="max-width: 1440px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 78px); height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+    <a href="/" style="display: flex; align-items: center; gap: 10px; white-space: nowrap;">
+      <span style="font-family: 'Quicksand',sans-serif; font-weight: 500; font-size: 19px; letter-spacing: .04em; color: #4f5ac7;">Kotaro Ozawa</span>
+      <span style="position: relative; top: 2px; font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .18em; color: #a9aec6;">PORTFOLIO</span>
+    </a>
+    <nav aria-label="メインナビゲーション" style="display: flex; align-items: center; gap: clamp(14px, 2.4vw, 34px); font-family: 'JetBrains Mono',monospace; font-size: 11px; letter-spacing: .16em;">
+      <a href="#profile" style="color: #4f5ac7; height: 70px; display: flex; align-items: center;" style-hover="color: #7c86e8;">PROFILE</a>
+      <a href="#skills" style="color: #797fa0; height: 70px; display: flex; align-items: center;" style-hover="color: #4f5ac7;">SKILLS</a>
+      <a href="#works" style="color: #797fa0; height: 70px; display: flex; align-items: center;" style-hover="color: #4f5ac7;">WORKS</a>
+      <a href="#news" style="color: #797fa0; height: 70px; display: flex; align-items: center;" style-hover="color: #4f5ac7;">NEWS</a>
+      <a href="#contact" style="display: flex; align-items: center; gap: 8px; border: 1px solid rgba(85,96,206,.3); border-radius: 8px; padding: 9px 16px; color: #4f5ac7; background: #fff;" style-hover="background: #f2f4fe;">
+        CONTACT
+        <span aria-hidden="true" style="display: inline-block; width: 16px; height: 1px; background: #8a93e4; position: relative; flex: none;" style-after="content: ''; position: absolute; right: 0; top: -2.5px; width: 6px; height: 6px; border-top: 1px solid #8a93e4; border-right: 1px solid #8a93e4; transform: rotate(45deg);"></span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main style="position: relative; z-index: 1; max-width: 1440px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 78px);">
+
+  <section style="min-height: calc(100vh - 70px); display: flex; align-items: flex-start; flex-wrap: wrap; gap: clamp(24px, 4vw, 64px); padding: clamp(28px, 4vh, 48px) 0 clamp(20px, 3vh, 36px);">
+  <div style="flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; justify-content: center;">
+    <div style="display: flex; align-items: center; gap: 12px; margin: 0 0 clamp(24px, 4vh, 40px); animation: fadeUp .8s ease .1s backwards;">
+      <span aria-hidden="true" style="display: block; width: 30px; height: 1px; background: #8a93e4;"></span>
+      <p style="font-family: 'JetBrains Mono',monospace; font-size: 11px; letter-spacing: .26em; color: #a9aec6; margin: 0;">ABOUT ME</p>
+    </div>
+
+    <h1 style="margin: 0 0 clamp(28px, 5vh, 46px); font-family: 'Zen Kaku Gothic New',sans-serif; font-weight: 700; font-size: clamp(22px, 2.6vw, 42px); line-height: 1.5; letter-spacing: .005em; color: #2f3550; max-width: 20em;">
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .15s;">学生目線の発想と最新Web技術で、</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .15s;"></span></span>
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .32s;">御社の魅力を若者へ届ける。</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .32s;"></span></span>
+    </h1>
+
+    <div style="display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New',sans-serif; font-weight: 500; font-size: clamp(15px, 1.42vw, 22px); line-height: 1.95; color: #4a5070; letter-spacing: .01em; max-width: 34em;">
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .55s;">学生フリーランスとして主に中小企業を対象に</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .55s;"></span></span>
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .63s;">ホームページ制作活動をしています。</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .63s;"></span></span>
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .71s;">今まで大学の課外活動で10社以上の企業の</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .71s;"></span></span>
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .79s;">デジタル化やDXに携わってきました。</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .79s;"></span></span>
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .87s;">具体的には、HP制作・基幹システム導入・PR動画制作です。</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .87s;"></span></span>
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: .95s;">その知見を生かし、より多くの企業に</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: .95s;"></span></span>
+      <span class="mw-line"><span class="mw-txt" style="animation-delay: 1.03s;">若者に刺さるHPをご提供できるよう精進してまいります。</span><span class="mask-wipe run" aria-hidden="true" style="animation-delay: 1.03s;"></span></span>
+    </div>
+
+    <div aria-hidden="true" style="margin-top: clamp(24px, 4vh, 46px); display: flex; align-items: center; gap: 16px; font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .18em; color: #b6bad0; animation: fadeUp 1s ease 1.2s backwards;">
+      SCROLL
+      <span style="display: block; width: 1px; height: 38px; background: linear-gradient(to bottom, #b6bad0, rgba(182,186,208,0)); animation: cueDrop 2.4s ease-in-out infinite;"></span>
+    </div>
+  </div>
+  </section>
+
+  <div class="marquee-wrap" style="overflow: hidden; width: 100vw; margin: 0 calc(50% - 50vw); padding: 0; height: calc(clamp(200px, 26vw, 340px) * 0.70);">
+    <div class="marquee-track" style="display: flex; width: max-content; gap: 56px; animation: marqueeScroll 26s linear infinite; margin-top: calc(clamp(200px, 26vw, 340px) * -0.185);">
+      <span style="display: flex; align-items: center; gap: 56px; flex: none;">
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+      </span>
+      <span style="display: flex; align-items: center; gap: 56px; flex: none;">
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+        <img src="assets/marquee_kotaro.png" alt="" style="height: clamp(200px, 26vw, 340px); width: auto; mix-blend-mode: multiply; opacity: .3; mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent 0, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 24%, black 32%, black 78%, transparent 86%); -webkit-mask-composite: source-in;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #9096e0; flex: none;"></span>
+      </span>
+    </div>
+  </div>
+
+  <section id="profile" style="display: flex; flex-wrap: wrap; gap: 20px clamp(24px, 3vw, 44px); padding: clamp(40px, 6vw, 64px) 0 clamp(60px, 9vw, 90px); position: relative;">
+    <div aria-hidden="true" style="position: absolute; left: -5px; top: -5px; width: 11px; height: 11px;">
+      <span style="position: absolute; left: 0; top: 5px; width: 11px; height: 1px; background: rgba(85,96,206,.4);"></span>
+      <span style="position: absolute; left: 5px; top: 0; width: 1px; height: 11px; background: rgba(85,96,206,.4);"></span>
+    </div>
+    <div aria-hidden="true" style="flex: 0 0 auto; min-width: 84px; display: flex; flex-direction: column; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .16em; color: #a9aec6; line-height: 2;">
+      <span>01</span>
+      <span>PROFILE</span>
+    </div>
+    <div style="flex: 1 1 520px; min-width: 0; display: flex; flex-wrap: wrap; gap: clamp(28px, 3vw, 52px); padding-left: clamp(20px, 2.6vw, 44px); position: relative;">
+      <div aria-hidden="true" style="position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: rgba(85,96,206,.16); mask-image: linear-gradient(to bottom, black 0, black 220px, transparent 260px, transparent 780px, black 820px, black 100%); -webkit-mask-image: linear-gradient(to bottom, black 0, black 220px, transparent 260px, transparent 780px, black 820px, black 100%);"></div>
+      <div style="flex: 0 1 300px; min-width: 0; position: relative;">
+        <div class="mask-host" style="position: relative; overflow: hidden; margin: 0 0 24px;">
+          <h2 style="font-family: 'Quicksand',sans-serif; font-weight: 400; font-size: clamp(42px, 4.2vw, 62px); line-height: 1.05; color: #4f5ac7; margin: 0;">Profile</h2>
+          <span class="mask-wipe" aria-hidden="true"></span>
+        </div>
+        <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; text-wrap: pretty;">東京理科大学経営学部の学生です。経営とITの両輪で、中小企業のWeb活用を伴走支援しています。</p>
+        <a href="/works" style="display: inline-flex; align-items: center; gap: 28px; border: 1px solid rgba(85,96,206,.3); border-radius: 8px; padding: 14px 20px; background: #fff; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .14em; color: #4f5ac7; white-space: nowrap; position: relative; z-index: 1;" style-hover="background: #f2f4fe;">
+          VIEW MY WORKS
+          <span aria-hidden="true" style="display: inline-block; width: 22px; height: 1px; background: #8a93e4; position: relative; flex: none;" style-after="content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-top: 1px solid #8a93e4; border-right: 1px solid #8a93e4; transform: rotate(45deg);"></span>
+        </a>
+        <img src="assets/sketch_profile.png" alt="" aria-hidden="true" style="position: absolute; left: -140px; top: 250px; width: clamp(340px, 38vw, 480px); height: auto; mix-blend-mode: multiply; opacity: .55; pointer-events: none; z-index: 1;">
+      </div>
+      <div style="flex: 1 1 460px; min-width: 0;">
+        <div style="height: 1px; background: rgba(85,96,206,.16); margin-bottom: 4px;"></div>
+
+        <div style="display: grid; grid-template-columns: 44px 1fr; gap: 0 20px; padding: 28px 0; border-bottom: 1px dashed rgba(85,96,206,.28); align-items: baseline;">
+          <span style="font-family: 'Quicksand',sans-serif; font-weight: 600; font-size: 13px; color: #a9aec6;">01</span>
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px;">
+            <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .16em; color: #4f5ac7;">NAME</span>
+            <span style="font-size: 19px; color: #3f4564; letter-spacing: .02em;">小澤 虎汰朗</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 44px 1fr; gap: 0 20px; padding: 28px 0; border-bottom: 1px dashed rgba(85,96,206,.28); align-items: baseline;">
+          <span style="font-family: 'Quicksand',sans-serif; font-weight: 600; font-size: 13px; color: #a9aec6;">02</span>
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px;">
+            <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .16em; color: #4f5ac7;">ROLE</span>
+            <span style="font-size: 19px; color: #3f4564; letter-spacing: .02em;">Webデザイナー / 学生</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 44px 1fr; gap: 0 20px; padding: 28px 0; border-bottom: 1px dashed rgba(85,96,206,.28); align-items: baseline;">
+          <span style="font-family: 'Quicksand',sans-serif; font-weight: 600; font-size: 13px; color: #a9aec6;">03</span>
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px;">
+            <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .16em; color: #4f5ac7;">LOCATION</span>
+            <span style="font-size: 19px; color: #3f4564; letter-spacing: .02em;">Tokyo, Japan</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 44px 1fr; gap: 0 20px; padding: 28px 0; border-bottom: 1px dashed rgba(85,96,206,.28); align-items: start;">
+          <span style="font-family: 'Quicksand',sans-serif; font-weight: 600; font-size: 13px; color: #a9aec6; padding-top: 1px;">04</span>
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px;">
+            <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .16em; color: #4f5ac7;">SKILLS</span>
+            <span style="font-size: 17px; line-height: 1.85; color: #3f4564; letter-spacing: .02em; text-align: right;">HTML / CSS / JS / TS / C# /<br>Python / SQL / PostgreSQL / Azure<br>などWeb制作、データ解析、システム系</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 44px 1fr; gap: 0 20px; padding: 28px 0; border-bottom: 1px dashed rgba(85,96,206,.28); align-items: start;">
+          <span style="font-family: 'Quicksand',sans-serif; font-weight: 600; font-size: 13px; color: #a9aec6; padding-top: 1px;">05</span>
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px;">
+            <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .16em; color: #4f5ac7;">INTEREST</span>
+            <span style="font-size: 17px; line-height: 1.85; color: #3f4564; letter-spacing: .02em; text-align: right;">デザイン / プログラミング /<br>データ解析 / 筋トレ</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 44px 1fr; gap: 0 20px; padding: 28px 0; align-items: start;">
+          <span style="font-family: 'Quicksand',sans-serif; font-weight: 600; font-size: 13px; color: #a9aec6; padding-top: 1px;">06</span>
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px;">
+            <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .16em; color: #4f5ac7;">MESSAGE</span>
+            <span style="font-size: 17px; line-height: 1.85; color: #3f4564; letter-spacing: .02em; text-align: right;">一つひとつの出会いを大切に、<br>丁寧に取り組みます。</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex: 1 1 100%; min-width: 0; margin-top: clamp(56px, 7vw, 90px);">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 20px; margin-bottom: clamp(30px, 4vw, 46px);">
+          <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .2em; color: #4f5ac7;">JOURNEY — 経営とITを、実務で結ぶまで</span>
+          <span style="font-family: 'JetBrains Mono',monospace; font-size: 11px; letter-spacing: .16em; color: #b3b8cd;">2024 → 2026</span>
+        </div>
+
+        <div class="tl-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px 0;">
+          <div class="tl-step" style="padding: 0 clamp(20px, 2.4vw, 34px) 0 0; border-top: 1px solid rgba(85,96,206,.22); position: relative; transition: opacity .3s ease;">
+            <span aria-hidden="true" class="tl-dot" style="position: absolute; left: 0; top: -3.5px; width: 7px; height: 7px; border-radius: 50%; background: #fff; border: 1px solid #8a93e4; transition: transform .4s cubic-bezier(.2,.8,.2,1), background .3s ease;"></span>
+            <div style="padding-top: 22px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-family: 'Quicksand',sans-serif; font-weight: 500; font-size: clamp(30px, 3vw, 40px); line-height: 1; color: #9aa0c4; letter-spacing: .01em;">2024</span>
+              </div>
+              <span style="display: block; margin: 14px 0 10px; font-size: 15.5px; line-height: 1.6; color: #3f4564; letter-spacing: .02em;">東京理科大学DX俱楽部を設立し、基幹システム開発を開始</span>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.95; color: #868ca9; text-wrap: pretty;">大学で線形代数・微積・統計学を学びつつ、独学でプログラミングをスタート。立ち上げたサークルでは副代表として、中小企業の基幹システム開発・運用にも携わる。</p>
+            </div>
+          </div>
+
+          <div class="tl-step" style="padding: 0 clamp(20px, 2.4vw, 34px) 0 0; border-top: 1px solid rgba(85,96,206,.22); position: relative; transition: opacity .3s ease;">
+            <span aria-hidden="true" class="tl-dot" style="position: absolute; left: 0; top: -3.5px; width: 7px; height: 7px; border-radius: 50%; background: #fff; border: 1px solid #8a93e4; transition: transform .4s cubic-bezier(.2,.8,.2,1), background .3s ease;"></span>
+            <div style="padding-top: 22px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-family: 'Quicksand',sans-serif; font-weight: 500; font-size: clamp(30px, 3vw, 40px); line-height: 1; color: #9aa0c4; letter-spacing: .01em;">2025</span>
+              </div>
+              <span style="display: block; margin: 14px 0 10px; font-size: 15.5px; line-height: 1.6; color: #3f4564; letter-spacing: .02em;">AI・データサイエンスからWeb制作まで</span>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.95; color: #868ca9; text-wrap: pretty;">大学でデータサイエンスやAIについて学びながら、サークルではホームページ制作も開始。IT企業の採用ページ制作や、中小企業向けのPR動画制作など、企業の魅力を発信する仕事にも取り組む。</p>
+            </div>
+          </div>
+
+          <div class="tl-step" style="padding: 0 clamp(20px, 2.4vw, 34px) 0 0; border-top: 1px solid rgba(85,96,206,.45); position: relative; transition: opacity .3s ease;">
+            <span aria-hidden="true" class="tl-dot" style="position: absolute; left: 0; top: -4.5px; width: 9px; height: 9px; border-radius: 50%; background: #5560ce; border: 1px solid #5560ce; box-shadow: 0 0 0 5px rgba(85,96,206,.12); transition: transform .4s cubic-bezier(.2,.8,.2,1), background .3s ease;"></span>
+            <div style="padding-top: 22px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-family: 'Quicksand',sans-serif; font-weight: 600; font-size: clamp(30px, 3vw, 40px); line-height: 1; color: #4f5ac7; letter-spacing: .01em;">2026</span>
+                <span style="font-family: 'JetBrains Mono',monospace; font-size: 9.5px; letter-spacing: .18em; color: #5560ce; border: 1px solid rgba(85,96,206,.35); border-radius: 999px; padding: 4px 9px 3px;">NOW</span>
+              </div>
+              <span style="display: block; margin: 14px 0 10px; font-size: 15.5px; line-height: 1.6; color: #3f4564; letter-spacing: .02em;">学生ならではの視点で、Web制作を仕事に</span>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.95; color: #868ca9; text-wrap: pretty;">中小企業向けのHP制作を個人でも本格的にスタート。新しい技術を取り入れながら、就活生・若者ならではの視点を活かして、「若い世代にも伝わる」Webサイトづくりに取り組んでいる。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <a href="#skills" class="next-cue" style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 34px 0 38px; border-top: 1px solid rgba(85,96,206,.16);">
+    <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .2em; color: #a9aec6;">NEXT — 02 SKILLS</span>
+    <span class="next-arrow" aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 66px; height: 66px; border-radius: 50%; border: 1px solid rgba(85,96,206,.3); background: #fff; flex: none; transition: transform .45s cubic-bezier(.2,.8,.2,1), background .3s ease;">
+      <span style="display: block; width: 1px; height: 24px; background: #6e79dc; position: relative;" style-after="content: ''; position: absolute; left: -4.5px; bottom: 0; width: 10px; height: 10px; border-bottom: 1px solid #6e79dc; border-left: 1px solid #6e79dc; transform: rotate(-45deg);"></span>
+    </span>
+  </a>
+
+  <section id="skills" style="display: flex; flex-wrap: wrap; gap: 20px clamp(24px, 3vw, 44px); padding: clamp(56px, 8vw, 82px) 0 clamp(60px, 9vw, 90px); margin-top: clamp(40px, 6vw, 80px);">
+    <div aria-hidden="true" style="flex: 0 0 auto; min-width: 84px; display: flex; flex-direction: column; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .16em; color: #a9aec6; line-height: 2;">
+      <span>02</span>
+      <span>SKILLS</span>
+    </div>
+    <div style="flex: 1 1 520px; min-width: 0; display: flex; flex-wrap: wrap; gap: clamp(28px, 3vw, 52px); border-left: 1px solid rgba(85,96,206,.16); padding-left: clamp(20px, 2.6vw, 44px);">
+      <div style="flex: 0 1 300px; min-width: 0;">
+        <div class="mask-host" style="position: relative; overflow: hidden; margin: 0 0 24px;">
+          <h2 style="font-family: 'Quicksand',sans-serif; font-weight: 400; font-size: clamp(42px, 4.2vw, 62px); line-height: 1.05; color: #4f5ac7; margin: 0;">What I Do</h2>
+          <span class="mask-wipe" aria-hidden="true"></span>
+        </div>
+        <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0; text-wrap: pretty;">企画からデザイン、開発、運用まで一気通貫でサポートします。CMSを用いてご自身で自走できるまで伴走いたします。</p>
+      </div>
+      <div style="flex: 1 1 480px; min-width: 0; height: clamp(560px, 64vw, 680px); overflow: hidden; display: flex; gap: 26px; position: relative; mask-image: linear-gradient(to bottom, transparent 0, black 10%, black 90%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 10%, black 90%, transparent 100%);">
+        <div class="skills-col" style="flex: 1 1 0; min-width: 0; overflow: hidden;">
+          <div class="skills-track" style="display: flex; flex-direction: column; gap: 26px; animation: skillsScroll 34s linear infinite;">
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">01</span>
+              <img src="assets/icon_edit_role.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Design<br>UI / UX</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">ユーザー体験を重視した直感的で美しいデザインを設計。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">Figmaで設計し、そのまま実装まで一貫対応。ワイヤーから2営業日で初稿をお出しします。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Figma</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Claude Design</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">03</span>
+              <img src="assets/icon_cube.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">CMS</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">microCMSで更新しやすいサイトを実現。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">文章と写真の差し替えは管理画面から。納品時に操作マニュアルもお渡しします。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">microCMS</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">05</span>
+              <img src="assets/icon_users.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Recruitment Support</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">採用に強いコンテンツ設計で成果につながるサイトを。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">社員インタビューの構成案づくりから同席し、応募につながる導線を設計します。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">LP</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">採用サイト</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">01</span>
+              <img src="assets/icon_edit_role.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Design<br>UI / UX</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">ユーザー体験を重視した直感的で美しいデザインを設計。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">Figmaで設計し、そのまま実装まで一貫対応。ワイヤーから2営業日で初稿をお出しします。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Figma</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Claude Design</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">03</span>
+              <img src="assets/icon_cube.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">CMS</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">microCMSで更新しやすいサイトを実現。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">文章と写真の差し替えは管理画面から。納品時に操作マニュアルもお渡しします。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">microCMS</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">05</span>
+              <img src="assets/icon_users.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Recruitment Support</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">採用に強いコンテンツ設計で成果につながるサイトを。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">社員インタビューの構成案づくりから同席し、応募につながる導線を設計します。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">LP</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">採用サイト</span>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="skills-col" style="flex: 1 1 0; min-width: 0; overflow: hidden;">
+          <div class="skills-track" style="display: flex; flex-direction: column; gap: 26px; animation: skillsScrollRev 40s linear infinite;">
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">02</span>
+              <img src="assets/icon_code.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Frontend<br>Development</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">モダンなコーディングで最適なサイトを構築。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">表示速度を意識した軽量実装。スマホ・タブレットまで崩れを確認して納品します。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">HTML</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">CSS</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">JS</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">TS</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">React</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">04</span>
+              <img src="assets/icon_search.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">SEO / Performance</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">検索上位表示を意識した設計で集客力を高めます。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">キーワード設計と構造化データを初期から実装。公開後の順位も継続して追跡します。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Google</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Analytics</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">06</span>
+              <img src="assets/icon_headset.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Maintenance<br>&amp; Support</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">公開後も安心のサポートで長く使えるサイトに。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">公開後の軽微な修正は追加費用なしで対応。改善提案も定期的にお送りします。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">改善提案</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">運用サポート</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">02</span>
+              <img src="assets/icon_code.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Frontend<br>Development</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">モダンなコーディングで最適なサイトを構築。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">表示速度を意識した軽量実装。スマホ・タブレットまで崩れを確認して納品します。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">HTML</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">CSS</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">JS</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">TS</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">React</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">04</span>
+              <img src="assets/icon_search.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">SEO / Performance</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">検索上位表示を意識した設計で集客力を高めます。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">キーワード設計と構造化データを初期から実装。公開後の順位も継続して追跡します。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Google</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Analytics</span>
+              </div>
+            </article>
+            <article class="skill-card" style="position: relative; overflow: hidden; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; padding: 32px 28px 26px;">
+              <span aria-hidden="true" style="position: absolute; top: 16px; right: 22px; font-family: 'Quicksand',sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: #eceefb; -webkit-text-stroke: 1px rgba(85,96,206,.28);">06</span>
+              <img src="assets/icon_headset.png" alt="" width="32" height="32" style="width: 32px; height: 32px; object-fit: contain;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 20px; font-weight: 600; line-height: 1.3; color: #3f4564; margin: 18px 0 0;">Maintenance<br>&amp; Support</h3>
+              <p style="font-size: 13px; line-height: 1.9; color: #818799; margin: 14px 0 20px;">公開後も安心のサポートで長く使えるサイトに。</p><div class="skill-detail"><div><p style="font-size: 12.5px; line-height: 1.95; color: #6b7290; margin: 0 0 20px; padding: 14px 0 0; border-top: 1px dashed rgba(85,96,206,.28);">公開後の軽微な修正は追加費用なしで対応。改善提案も定期的にお送りします。</p></div></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">改善提案</span>
+                <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">運用サポート</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+</div>
+    </div>
+  </section>
+
+  <a href="#works" class="next-cue" style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 34px 0 38px; border-top: 1px solid rgba(85,96,206,.16);">
+    <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .2em; color: #a9aec6;">NEXT — 03 WORKS</span>
+    <span class="next-arrow" aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 66px; height: 66px; border-radius: 50%; border: 1px solid rgba(85,96,206,.3); background: #fff; flex: none; transition: transform .45s cubic-bezier(.2,.8,.2,1), background .3s ease;">
+      <span style="display: block; width: 1px; height: 24px; background: #6e79dc; position: relative;" style-after="content: ''; position: absolute; left: -4.5px; bottom: 0; width: 10px; height: 10px; border-bottom: 1px solid #6e79dc; border-left: 1px solid #6e79dc; transform: rotate(-45deg);"></span>
+    </span>
+  </a>
+
+  <section id="works" style="display: flex; flex-wrap: wrap; gap: 20px clamp(24px, 3vw, 44px); padding: clamp(56px, 8vw, 82px) 0 clamp(60px, 9vw, 90px);">
+    <div aria-hidden="true" style="flex: 0 0 auto; min-width: 84px; display: flex; flex-direction: column; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .16em; color: #a9aec6; line-height: 2;">
+      <span>03</span>
+      <span>WORKS</span>
+    </div>
+    <div style="flex: 1 1 520px; min-width: 0; display: flex; flex-wrap: wrap; gap: clamp(28px, 3vw, 52px); border-left: 1px solid rgba(85,96,206,.16); padding-left: clamp(20px, 2.6vw, 44px);">
+      <div style="flex: 0 1 300px; min-width: 0;">
+        <div class="mask-host" style="position: relative; overflow: hidden; margin: 0 0 24px;">
+          <h2 style="font-family: 'Quicksand',sans-serif; font-weight: 400; font-size: clamp(42px, 4.2vw, 62px); line-height: 1.05; color: #4f5ac7; margin: 0;">Recent Works</h2>
+          <span class="mask-wipe" aria-hidden="true"></span>
+        </div>
+        <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; text-wrap: pretty;">これまでに制作したWebサイトやデザインの一部をご紹介します。</p>
+        <a href="/works" style="display: inline-flex; align-items: center; gap: 28px; border: 1px solid rgba(85,96,206,.3); border-radius: 8px; padding: 14px 20px; background: #fff; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .14em; color: #4f5ac7; white-space: nowrap;" style-hover="background: #f2f4fe;">
+          VIEW ALL WORKS
+          <span aria-hidden="true" style="display: inline-block; width: 22px; height: 1px; background: #8a93e4; position: relative; flex: none;" style-after="content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-top: 1px solid #8a93e4; border-right: 1px solid #8a93e4; transform: rotate(45deg);"></span>
+        </a>
+      </div>
+      <div style="flex: 1 1 480px; min-width: 0;">
+        <div style="position: relative; height: clamp(420px, 46vw, 560px); perspective: 1800px;">
+          <a href="/works/design-studio-website" class="wk-card" style="position: absolute; inset: 0; display: flex; flex-direction: column; border: 1px solid rgba(85,96,206,.24); border-radius: 20px; overflow: hidden; background: #fff; transform-style: preserve-3d; transform-origin: left center; box-shadow: 0 24px 50px -28px rgba(79,90,199,.35); transition: transform .6s cubic-bezier(.4,0,.2,1), opacity .5s ease; {{ worksCardStyle0 }}">
+            <div style="flex: 1 1 auto; position: relative; overflow: hidden; background: linear-gradient(150deg,#EDEFFB,#E4E8F9), repeating-linear-gradient(135deg, rgba(255,255,255,.4) 0 2px, transparent 2px 12px); display: flex; align-items: flex-end; justify-content: center; padding: 20px;"><div class="wk-shot-inner" aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 100%; height: 250%; background: linear-gradient(to bottom, rgba(255,255,255,.62) 0 16%, rgba(255,255,255,0) 16% 21%, rgba(255,255,255,.44) 21% 38%, rgba(255,255,255,0) 38% 44%, rgba(255,255,255,.54) 44% 62%, rgba(255,255,255,0) 62% 68%, rgba(255,255,255,.38) 68% 100%);"></div>
+              <span style="position: absolute; left: 18px; top: 18px; background: rgba(255,255,255,.92); border: 1px solid rgba(85,96,206,.24); border-radius: 6px; padding: 6px 12px; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #5a61a8; white-space: nowrap;">コーポレートサイト</span>
+              <span style="font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .1em; color: #9ba1c4;">corporate site photo</span>
+            </div>
+            <div style="padding: 24px 28px;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 19px; font-weight: 600; color: #3f4564; margin: 0 0 14px;">Design Studio Website</h3>
+              <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Web Design</span>
+            </div>
+          </a>
+          <a href="/works/travel-app-uiux" class="wk-card" style="position: absolute; inset: 0; display: flex; flex-direction: column; border: 1px solid rgba(85,96,206,.24); border-radius: 20px; overflow: hidden; background: #fff; transform-style: preserve-3d; transform-origin: left center; box-shadow: 0 24px 50px -28px rgba(79,90,199,.35); transition: transform .6s cubic-bezier(.4,0,.2,1), opacity .5s ease; {{ worksCardStyle1 }}">
+            <div style="flex: 1 1 auto; position: relative; overflow: hidden; background: linear-gradient(150deg,#EEEBFB,#E6E9FA), repeating-linear-gradient(135deg, rgba(255,255,255,.4) 0 2px, transparent 2px 12px); display: flex; align-items: flex-end; justify-content: center; padding: 20px;"><div class="wk-shot-inner" aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 100%; height: 250%; background: linear-gradient(to bottom, rgba(255,255,255,.62) 0 16%, rgba(255,255,255,0) 16% 21%, rgba(255,255,255,.44) 21% 38%, rgba(255,255,255,0) 38% 44%, rgba(255,255,255,.54) 44% 62%, rgba(255,255,255,0) 62% 68%, rgba(255,255,255,.38) 68% 100%);"></div>
+              <span style="position: absolute; left: 18px; top: 18px; background: rgba(255,255,255,.92); border: 1px solid rgba(85,96,206,.24); border-radius: 6px; padding: 6px 12px; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #5a61a8; white-space: nowrap;">アプリ UI/UX</span>
+              <span style="font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .1em; color: #9ba1c4;">app screens mockup</span>
+            </div>
+            <div style="padding: 24px 28px;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 19px; font-weight: 600; color: #3f4564; margin: 0 0 14px;">Travel App UI/UX</h3>
+              <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">UI/UX Design</span>
+            </div>
+          </a>
+          <a href="/works/coffee-brand-site" class="wk-card" style="position: absolute; inset: 0; display: flex; flex-direction: column; border: 1px solid rgba(85,96,206,.24); border-radius: 20px; overflow: hidden; background: #fff; transform-style: preserve-3d; transform-origin: left center; box-shadow: 0 24px 50px -28px rgba(79,90,199,.35); transition: transform .6s cubic-bezier(.4,0,.2,1), opacity .5s ease; {{ worksCardStyle2 }}">
+            <div style="flex: 1 1 auto; position: relative; overflow: hidden; background: linear-gradient(150deg,#EFEDF9,#E8E5F6), repeating-linear-gradient(135deg, rgba(255,255,255,.4) 0 2px, transparent 2px 12px); display: flex; align-items: flex-end; justify-content: center; padding: 20px;"><div class="wk-shot-inner" aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 100%; height: 250%; background: linear-gradient(to bottom, rgba(255,255,255,.62) 0 16%, rgba(255,255,255,0) 16% 21%, rgba(255,255,255,.44) 21% 38%, rgba(255,255,255,0) 38% 44%, rgba(255,255,255,.54) 44% 62%, rgba(255,255,255,0) 62% 68%, rgba(255,255,255,.38) 68% 100%);"></div>
+              <span style="position: absolute; left: 18px; top: 18px; background: rgba(255,255,255,.92); border: 1px solid rgba(85,96,206,.24); border-radius: 6px; padding: 6px 12px; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #5a61a8; white-space: nowrap;">ブランディングサイト</span>
+              <span style="font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .1em; color: #9ba1c4;">cafe interior photo</span>
+            </div>
+            <div style="padding: 24px 28px;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 19px; font-weight: 600; color: #3f4564; margin: 0 0 14px;">Coffee Brand Site</h3>
+              <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Branding / Web Design</span>
+            </div>
+          </a>
+          <a href="/works/recruit-site-renewal" class="wk-card" style="position: absolute; inset: 0; display: flex; flex-direction: column; border: 1px solid rgba(85,96,206,.24); border-radius: 20px; overflow: hidden; background: #fff; transform-style: preserve-3d; transform-origin: left center; box-shadow: 0 24px 50px -28px rgba(79,90,199,.35); transition: transform .6s cubic-bezier(.4,0,.2,1), opacity .5s ease; {{ worksCardStyle3 }}">
+            <div style="flex: 1 1 auto; position: relative; overflow: hidden; background: linear-gradient(150deg,#ECEFFA,#E3E8F8), repeating-linear-gradient(135deg, rgba(255,255,255,.4) 0 2px, transparent 2px 12px); display: flex; align-items: flex-end; justify-content: center; padding: 20px;"><div class="wk-shot-inner" aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 100%; height: 250%; background: linear-gradient(to bottom, rgba(255,255,255,.62) 0 16%, rgba(255,255,255,0) 16% 21%, rgba(255,255,255,.44) 21% 38%, rgba(255,255,255,0) 38% 44%, rgba(255,255,255,.54) 44% 62%, rgba(255,255,255,0) 62% 68%, rgba(255,255,255,.38) 68% 100%);"></div>
+              <span style="position: absolute; left: 18px; top: 18px; background: rgba(255,255,255,.92); border: 1px solid rgba(85,96,206,.24); border-radius: 6px; padding: 6px 12px; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #5a61a8; white-space: nowrap;">採用サイト</span>
+              <span style="font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .1em; color: #9ba1c4;">team portrait photo</span>
+            </div>
+            <div style="padding: 24px 28px;">
+              <h3 style="font-family: 'Quicksand',sans-serif; font-size: 19px; font-weight: 600; color: #3f4564; margin: 0 0 14px;">Recruit Site Renewal</h3>
+              <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 6px; padding: 6px 12px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: #6e7492;">Web Design</span>
+            </div>
+          </a>
+        </div>
+        <div style="height: 2px; background: rgba(85,96,206,.14); border-radius: 2px; overflow: hidden; margin-top: 20px;">{{ worksProgress }}</div>
+        <div style="display: flex; align-items: center; gap: 18px; margin-top: 18px;">
+          <button type="button" onClick="{{ worksPrev }}" aria-label="前の実績" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(85,96,206,.3); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none;" style-hover="background: #f2f4fe;">
+            <span aria-hidden="true" style="display: inline-block; width: 16px; height: 1px; background: #6e79dc; position: relative; transform: rotate(180deg);" style-after="content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-top: 1px solid #6e79dc; border-right: 1px solid #6e79dc; transform: rotate(45deg);"></span>
+          </button>
+          <span style="font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .12em; color: #a9aec6; min-width: 56px;">{{ worksCounter }}</span>
+          <button type="button" onClick="{{ worksNext }}" aria-label="次の実績" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(85,96,206,.3); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none;" style-hover="background: #f2f4fe;">
+            <span aria-hidden="true" style="display: inline-block; width: 16px; height: 1px; background: #6e79dc; position: relative;" style-after="content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-top: 1px solid #6e79dc; border-right: 1px solid #6e79dc; transform: rotate(45deg);"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <a href="#news" class="next-cue" style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 34px 0 38px; border-top: 1px solid rgba(85,96,206,.16);">
+    <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .2em; color: #a9aec6;">NEXT — 04 NEWS</span>
+    <span class="next-arrow" aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 66px; height: 66px; border-radius: 50%; border: 1px solid rgba(85,96,206,.3); background: #fff; flex: none; transition: transform .45s cubic-bezier(.2,.8,.2,1), background .3s ease;">
+      <span style="display: block; width: 1px; height: 24px; background: #6e79dc; position: relative;" style-after="content: ''; position: absolute; left: -4.5px; bottom: 0; width: 10px; height: 10px; border-bottom: 1px solid #6e79dc; border-left: 1px solid #6e79dc; transform: rotate(-45deg);"></span>
+    </span>
+  </a>
+
+  <section id="news" style="display: flex; flex-wrap: wrap; gap: 20px clamp(24px, 3vw, 44px); padding: clamp(56px, 8vw, 82px) 0 clamp(60px, 9vw, 90px);">
+    <div aria-hidden="true" style="flex: 0 0 auto; min-width: 84px; display: flex; flex-direction: column; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .16em; color: #a9aec6; line-height: 2;">
+      <span>04</span>
+      <span>NEWS</span>
+    </div>
+    <div style="flex: 1 1 520px; min-width: 0; display: flex; flex-wrap: wrap; gap: clamp(28px, 3vw, 52px); border-left: 1px solid rgba(85,96,206,.16); padding-left: clamp(20px, 2.6vw, 44px);">
+      <div style="flex: 0 1 300px; min-width: 0;">
+        <div class="mask-host" style="position: relative; overflow: hidden; margin: 0 0 24px;">
+          <h2 style="font-family: 'Quicksand',sans-serif; font-weight: 400; font-size: clamp(42px, 4.2vw, 62px); line-height: 1.05; color: #4f5ac7; margin: 0;">Latest News</h2>
+          <span class="mask-wipe" aria-hidden="true"></span>
+        </div>
+        <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; text-wrap: pretty;">活動内容やお知らせ、制作の裏側などを発信しています。</p>
+        <a href="/news" style="display: inline-flex; align-items: center; gap: 28px; border: 1px solid rgba(85,96,206,.3); border-radius: 8px; padding: 14px 20px; background: #fff; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .14em; color: #4f5ac7; white-space: nowrap;" style-hover="background: #f2f4fe;">
+          VIEW ALL NEWS
+          <span aria-hidden="true" style="display: inline-block; width: 22px; height: 1px; background: #8a93e4; position: relative; flex: none;" style-after="content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-top: 1px solid #8a93e4; border-right: 1px solid #8a93e4; transform: rotate(45deg);"></span>
+        </a>
+      </div>
+      <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 22px;">
+        <a href="/news/2025-05-20-corporate-site" style="display: block; border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; overflow: hidden; padding: 30px 32px 32px;" style-hover="background: #fafbff;">
+          <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+            <span style="border: 1px solid rgba(85,96,206,.22); border-radius: 5px; padding: 5px 11px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 10.5px; letter-spacing: .1em; color: #4f5ac7;">PICK UP</span>
+            <time style="font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .06em; color: #a9aec6;">2025.05.20</time>
+          </div>
+          <h3 style="font-family: 'Zen Kaku Gothic New',sans-serif; font-weight: 700; font-size: clamp(21px, 2.1vw, 27px); line-height: 1.55; color: #2f3550; margin: 0 0 16px; letter-spacing: .01em; text-wrap: pretty;">コーポレートサイトを制作しました</h3>
+          <p style="font-size: 15px; line-height: 1.95; color: #767c9c; margin: 0 0 24px; text-wrap: pretty;">創業50年の製造業様のコーポレートサイトを全面リニューアル。取材から撮影、CMS導入まで一貫して担当しました。</p>
+          <span style="display: inline-flex; align-items: center; gap: 20px; font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .14em; color: #4f5ac7;">
+            READ MORE
+            <span aria-hidden="true" style="display: inline-block; width: 22px; height: 1px; background: #8a93e4; position: relative; flex: none;" style-after="content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-top: 1px solid #8a93e4; border-right: 1px solid #8a93e4; transform: rotate(45deg);"></span>
+          </span>
+        </a>
+        <div style="border: 1px solid rgba(85,96,206,.24); border-radius: 18px; background: #fff; overflow: hidden;">
+          <a href="/news/2025-04-15-portfolio-renewal" style="display: flex; align-items: center; gap: 20px; padding: 20px 28px; border-bottom: 1px solid rgba(85,96,206,.14);" style-hover="background: #fafbff;">
+            <time style="flex: 0 0 auto; width: 84px; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .06em; color: #a9aec6;">2025.04.15</time>
+            <span style="flex: 0 0 auto; border: 1px solid rgba(85,96,206,.22); border-radius: 5px; padding: 5px 10px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .08em; color: #4f5ac7;">NEWS</span>
+            <span style="flex: 1 1 auto; min-width: 0; font-size: 14.5px; color: #3f4564; letter-spacing: .02em;">ポートフォリオサイトをリニューアルしました</span>
+            <span aria-hidden="true" style="flex: none; width: 20px; height: 1px; background: #a6add8; position: relative;" style-after="content: ''; position: absolute; right: 0; top: -2.5px; width: 6px; height: 6px; border-top: 1px solid #a6add8; border-right: 1px solid #a6add8; transform: rotate(45deg);"></span>
+          </a>
+          <a href="/news/2025-03-01-design-inspiration" style="display: flex; align-items: center; gap: 20px; padding: 20px 28px;" style-hover="background: #fafbff;">
+            <time style="flex: 0 0 auto; width: 84px; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .06em; color: #a9aec6;">2025.03.01</time>
+            <span style="flex: 0 0 auto; border: 1px solid rgba(85,96,206,.22); border-radius: 5px; padding: 5px 10px; white-space: nowrap; font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: .08em; color: #4f5ac7;">BLOG</span>
+            <span style="flex: 1 1 auto; min-width: 0; font-size: 14.5px; color: #3f4564; letter-spacing: .02em;">デザインのインスピレーション源について</span>
+            <span aria-hidden="true" style="flex: none; width: 20px; height: 1px; background: #a6add8; position: relative;" style-after="content: ''; position: absolute; right: 0; top: -2.5px; width: 6px; height: 6px; border-top: 1px solid #a6add8; border-right: 1px solid #a6add8; transform: rotate(45deg);"></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <a href="#contact" class="next-cue" style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 34px 0 38px; border-top: 1px solid rgba(85,96,206,.16);">
+    <span style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: .2em; color: #a9aec6;">NEXT — 05 CONTACT</span>
+    <span class="next-arrow" aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 66px; height: 66px; border-radius: 50%; border: 1px solid rgba(85,96,206,.3); background: #fff; flex: none; transition: transform .45s cubic-bezier(.2,.8,.2,1), background .3s ease;">
+      <span style="display: block; width: 1px; height: 24px; background: #6e79dc; position: relative;" style-after="content: ''; position: absolute; left: -4.5px; bottom: 0; width: 10px; height: 10px; border-bottom: 1px solid #6e79dc; border-left: 1px solid #6e79dc; transform: rotate(-45deg);"></span>
+    </span>
+  </a>
+
+  <section id="contact" style="display: flex; flex-wrap: wrap; gap: 20px clamp(24px, 3vw, 44px); padding: clamp(56px, 8vw, 82px) 0 clamp(60px, 9vw, 90px);">
+    <div aria-hidden="true" style="flex: 0 0 auto; min-width: 84px; display: flex; flex-direction: column; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .16em; color: #a9aec6; line-height: 2;">
+      <span>05</span>
+      <span>CONTACT</span>
+    </div>
+    <div style="flex: 1 1 520px; min-width: 0; display: flex; flex-wrap: wrap; gap: clamp(28px, 3vw, 52px); border-left: 1px solid rgba(85,96,206,.16); padding-left: clamp(20px, 2.6vw, 44px);">
+      <div style="flex: 1 1 320px; min-width: 0;">
+        <div class="mask-host" style="position: relative; overflow: hidden; margin: 0 0 24px;">
+          <h2 style="font-family: 'Quicksand',sans-serif; font-weight: 400; font-size: clamp(42px, 4.2vw, 62px); line-height: 1.05; color: #4f5ac7; margin: 0;">Let's Work<br>Together</h2>
+          <span class="mask-wipe" aria-hidden="true"></span>
+        </div>
+        <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; max-width: 34em; text-wrap: pretty;">ご相談・お見積りは無料です。まずはお気軽にご連絡ください。</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
+          <a href="mailto:k.ozawa.hp@gmail.com" style="display: inline-flex; align-items: center; gap: 28px; border: 1px solid rgba(85,96,206,.3); border-radius: 8px; padding: 14px 20px; background: linear-gradient(100deg,#dde1f8,#e7e2f7); font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .14em; color: #4b539e; white-space: nowrap;" style-hover="background: linear-gradient(100deg,#d3d8f5,#dfd9f5);">
+            CONTACT ME
+            <span aria-hidden="true" style="display: inline-block; width: 22px; height: 1px; background: #6e79dc; position: relative; flex: none;" style-after="content: ''; position: absolute; right: 0; top: -3px; width: 7px; height: 7px; border-top: 1px solid #6e79dc; border-right: 1px solid #6e79dc; transform: rotate(45deg);"></span>
+          </a>
+          <a href="mailto:k.ozawa.hp@gmail.com" style="display: inline-flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .1em; color: #797fa0;" style-hover="color: #4f5ac7;">
+            <img src="assets/icon_mail.png" alt="" width="18" height="18" style="width: 18px; height: 18px; object-fit: contain;">
+            k.ozawa.hp@gmail.com
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 30px 0 46px; border-top: 1px solid rgba(85,96,206,.16);">
+    <span style="font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .08em; color: #a9aec6;">© 2026 Kotaro Ozawa Portfolio.</span>
+    <a href="#top" style="display: flex; align-items: center; gap: 20px; font-family: 'JetBrains Mono',monospace; font-size: 12px; letter-spacing: .14em; color: #797fa0;" style-hover="color: #4f5ac7;">
+      BACK TO TOP
+      <span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(85,96,206,.3); background: #fff; display: flex; align-items: center; justify-content: center; flex: none;">
+        <span style="display: block; width: 1px; height: 15px; background: #6e79dc; position: relative;" style-after="content: ''; position: absolute; left: -3.5px; top: 0; width: 8px; height: 8px; border-top: 1px solid #6e79dc; border-left: 1px solid #6e79dc; transform: rotate(45deg);"></span>
+      </span>
+    </a>
+  </footer>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dotCount&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:70,&quot;min&quot;:20,&quot;max&quot;:160,&quot;step&quot;:10,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;背景の点々&quot;},&quot;dotDrift&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;背景の点々&quot;},&quot;showGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;背景の点々&quot;}}">
+class Component extends DCLogic {
+  canvasRef = React.createRef();
+  state = { worksIndex: 0, activeSection: 'profile' };
+  static SECTIONS = ['profile', 'skills', 'works', 'news', 'contact'];
+
+  worksCardStyle(i) {
+    const diff = (i - this.state.worksIndex + 4) % 4;
+    if (diff === 0) return 'transform: rotateY(0deg) scale(1) translateY(0); opacity: 1; z-index: 4; pointer-events: auto;';
+    if (diff === 1) return 'transform: rotateY(0deg) scale(.97) translateY(10px); opacity: 1; z-index: 3; pointer-events: none;';
+    if (diff === 2) return 'transform: rotateY(0deg) scale(.94) translateY(20px); opacity: .85; z-index: 2; pointer-events: none;';
+    return 'transform: rotateY(-112deg) scale(.97) translateY(0); opacity: 0; z-index: 1; pointer-events: none; box-shadow: -22px 0 36px -12px rgba(60,60,95,.4), 0 24px 50px -28px rgba(79,90,199,.35);';
+  }
+
+  componentDidMount() {
+    this.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.scrollOffset = 0;
+    this.scrollTarget = 0;
+    this.build();
+    this.onResize = () => this.build();
+    this.lastScroll = window.scrollY || 0;
+    this.onScroll = () => {
+      const gsap = window.gsap;
+      this.scrollTarget = window.scrollY || window.pageYOffset || 0;
+      const delta = this.scrollTarget - this.lastScroll;
+      this.lastScroll = this.scrollTarget;
+      if (gsap && !this.reduced) {
+        gsap.to(this, { scrollOffset: this.scrollTarget, duration: 1.5, ease: 'power2.out', overwrite: true });
+        if (Math.abs(delta) > 18) this.jolt(delta);
+      } else {
+        this.scrollOffset = this.scrollTarget;
+      }
+    };
+    window.addEventListener('resize', this.onResize);
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+
+    if (window.gsap) {
+      this.tickFn = () => this.draw();
+      window.gsap.ticker.add(this.tickFn);
+    } else {
+      const loop = () => { this.draw(); this.raf = requestAnimationFrame(loop); };
+      this.raf = requestAnimationFrame(loop);
+    }
+
+    this.maskObserver = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          en.target.classList.add('run');
+          const m = en.target.querySelector('.mask-wipe');
+          if (m) m.classList.add('run');
+          this.maskObserver.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.35 });
+    document.querySelectorAll('.mask-wipe').forEach((el) => {
+      if (el.parentElement) this.maskObserver.observe(el.parentElement);
+    });
+
+    this.resetWorksTimer();
+
+    this.secObserver = new IntersectionObserver((entries) => {
+      const hit = entries.filter((e) => e.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (hit && hit.target.id !== this.state.activeSection) {
+        this.setState({ activeSection: hit.target.id });
+      }
+    }, { rootMargin: '-40% 0px -40% 0px', threshold: [0, 0.2, 0.6] });
+    Component.SECTIONS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) this.secObserver.observe(el);
+    });
+  }
+
+  navVals() {
+    const out = {};
+    Component.SECTIONS.forEach((id, i) => {
+      const on = this.state.activeSection === id;
+      out['navStyle' + i] = 'color: ' + (on ? '#4f5ac7' : '#c2c6da') + '; transition: color .4s ease;';
+      out['navLabel' + i] = 'opacity: ' + (on ? 1 : 0) + '; transform: translateX(' + (on ? 0 : 6) + 'px); transition: opacity .4s ease, transform .4s ease;';
+      out['navBar' + i] = 'width: ' + (on ? 26 : 12) + 'px; opacity: ' + (on ? 1 : 0.5) + '; transition: width .4s cubic-bezier(.2,.8,.2,1), opacity .4s ease;';
+    });
+    return out;
+  }
+
+  resetWorksTimer() {
+    if (this.worksTimer) clearInterval(this.worksTimer);
+    this.worksTimer = setInterval(() => {
+      this.setState((s) => ({ worksIndex: (s.worksIndex + 1) % 4 }));
+    }, 5000);
+  }
+
+  componentDidUpdate(prevProps) {
+    // カルーセルの state 更新で点々を作り直すとワープするので、props 変更時のみ再構築
+    if (prevProps !== this.props) this.build();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('scroll', this.onScroll);
+    if (this.raf) cancelAnimationFrame(this.raf);
+    if (this.tickFn && window.gsap) window.gsap.ticker.remove(this.tickFn);
+    if (this.maskObserver) this.maskObserver.disconnect();
+    if (this.secObserver) this.secObserver.disconnect();
+    if (this.worksTimer) clearInterval(this.worksTimer);
+    (this.dots || []).forEach((d) => d._tween && d._tween.kill());
+  }
+
+  wander(dot) {
+    const gsap = window.gsap;
+    if (!gsap || this.reduced) return;
+    const span = 46 + dot.depth * 80;
+    dot._tween = gsap.to(dot, {
+      wx: gsap.utils.random(-span, span),
+      wy: gsap.utils.random(-span, span),
+      duration: gsap.utils.random(3.4, 6.5),
+      ease: 'sine.inOut',
+      onComplete: () => this.wander(dot),
+    });
+  }
+
+  // スクロールに反応してふわっと流れる（頻繁な割り込みを抑えてカクつきを防ぐ）
+  jolt(delta) {
+    const gsap = window.gsap;
+    if (!gsap || this.reduced) return;
+    const now = performance.now();
+    if (this.lastJolt && now - this.lastJolt < 650) return;
+    this.lastJolt = now;
+    const kick = Math.min(Math.abs(delta) * 1.1, 110);
+    const all = [...(this.dots || []), ...(this.blobs || [])];
+    for (const d of all) {
+      if (Math.random() > 0.45) continue;
+      // wander は殺さず、別レイヤー(jx/jy)に加算するので速度が反転しない
+      if (d._jolt) d._jolt.kill();
+      const ang = Math.random() * Math.PI * 2;
+      const dist = gsap.utils.random(kick * 0.25, kick) * (0.4 + d.depth);
+      d._jolt = gsap.to(d, {
+        jx: Math.cos(ang) * dist,
+        jy: Math.sin(ang) * dist,
+        duration: gsap.utils.random(1.1, 1.9),
+        ease: 'sine.out',
+        onComplete: () => {
+          d._jolt = gsap.to(d, { jx: 0, jy: 0, duration: gsap.utils.random(2.2, 3.6), ease: 'sine.inOut' });
+        },
+      });
+    }
+  }
+
+  build() {
+    const canvas = this.canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.w = window.innerWidth;
+    this.h = window.innerHeight;
+    canvas.width = this.w * dpr;
+    canvas.height = this.h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.ctx = ctx;
+
+    const rand = (a, b) => a + Math.random() * (b - a);
+    // 青紫グラデーションのみ（サイトのアクセントカラーに合わせる）
+    const COLORS = [
+      [79, 90, 199], [99, 102, 241], [110, 121, 220], [124, 134, 232],
+      [139, 92, 246], [150, 130, 235], [160, 150, 235], [106, 90, 224],
+    ];
+    const count = Math.max(20, Math.round(this.props.dotCount ?? 70));
+    this.field = this.h + 260;
+
+    (this.dots || []).forEach((d) => d._tween && d._tween.kill());
+    this.dots = Array.from({ length: count }, () => {
+      const depth = rand(0.18, 1);
+      const core = rand(0.9, 2.6) + depth * 1.9;
+      const dot = {
+        x: rand(-0.02, 1.02),
+        y: rand(0, 1),
+        core,
+        glow: core * rand(3.4, 7),
+        rgb: COLORS[Math.floor(Math.random() * COLORS.length)],
+        depth,
+        wx: 0,
+        wy: 0,
+        jx: 0,
+        jy: 0,
+      };
+      this.wander(dot);
+      return dot;
+    });
+
+    // やわらかい大きな光のかたまり（参考サイトの淡いにじみ）
+    (this.blobs || []).forEach((d) => d._tween && d._tween.kill());
+    this.blobs = Array.from({ length: 4 }, () => {
+      const depth = rand(0.1, 0.5);
+      const b = {
+        x: rand(0, 1),
+        y: rand(0, 1),
+        r: rand(160, 460),
+        rgb: COLORS[Math.floor(Math.random() * COLORS.length)],
+        alpha: rand(0.03, 0.075),
+        depth,
+        wx: 0,
+        wy: 0,
+        jx: 0,
+        jy: 0,
+      };
+      this.wander(b);
+      return b;
+    });
+
+    this.draw();
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    if (!ctx || !this.dots) return;
+    const drift = this.reduced ? 0 : (this.props.dotDrift ?? 1) * 0.55;
+    const scroll = this.reduced ? (window.scrollY || 0) : this.scrollOffset;
+    const F = this.field;
+    ctx.clearRect(0, 0, this.w, this.h);
+
+    // Profile セクション以降（ヒーローを過ぎたあたり）から背景を薄くする
+    const heroH = window.innerHeight;
+    const realScroll = window.scrollY || 0;
+    const fadeT = Math.min(1, Math.max(0, (realScroll - heroH * 0.55) / (heroH * 0.7)));
+    const fade = 1 - fadeT * 0.72;
+
+    // 折り返し地点では透明にフェードさせ、ワープを見えなくする
+    const EDGE = 150;
+    const place = (d) => {
+      const raw = ((d.y * F - scroll * d.depth * drift) % F + F) % F;
+      const edgeFade = Math.min(1, raw / EDGE, (F - raw) / EDGE);
+      return {
+        x: d.x * this.w + (d.wx || 0) + (d.jx || 0),
+        y: raw - 130 + (d.wy || 0) + (d.jy || 0),
+        ef: Math.max(0, edgeFade),
+      };
+    };
+
+    for (const b of this.blobs) {
+      const { x, y, ef } = place(b);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, b.r);
+      g.addColorStop(0, 'rgba(' + b.rgb.join(',') + ',' + (b.alpha * fade * ef).toFixed(4) + ')');
+      g.addColorStop(1, 'rgba(' + b.rgb.join(',') + ',0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 光の粒: 中心が明るく外へ完全に減衰する放射グラデーション（輪郭なし）
+    ctx.globalCompositeOperation = 'lighter';
+    for (const d of this.dots) {
+      const { x, y, ef } = place(d);
+      const rgb = d.rgb.join(',');
+      const r = Math.max(6, d.glow * 1.9);
+      const a = (0.30 + d.depth * 0.34) * fade * ef;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(' + rgb + ',' + a.toFixed(4) + ')');
+      g.addColorStop(0.32, 'rgba(' + rgb + ',' + (a * 0.42).toFixed(4) + ')');
+      g.addColorStop(1, 'rgba(' + rgb + ',0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  renderVals() {
+    return {
+      ...this.navVals(),
+      // key を切り替えて再マウントさせ、めくるたびにバーを 0 から走らせる
+      worksProgress: React.createElement('span', {
+        key: this.state.worksIndex,
+        style: {
+          display: 'block', height: '100%', width: 0,
+          background: 'linear-gradient(90deg,#a3abe6,#6e79dc)',
+          animation: 'barGrow 5s linear forwards',
+        },
+      }),
+      canvasRef: this.canvasRef,
+      showGrid: this.props.showGrid ?? true,
+      worksCardStyle0: this.worksCardStyle(0),
+      worksCardStyle1: this.worksCardStyle(1),
+      worksCardStyle2: this.worksCardStyle(2),
+      worksCardStyle3: this.worksCardStyle(3),
+      worksCounter: '0' + (this.state.worksIndex + 1) + ' / 04',
+      worksPrev: () => { this.resetWorksTimer(); this.setState((s) => ({ worksIndex: (s.worksIndex + 3) % 4 })); },
+      worksNext: () => { this.resetWorksTimer(); this.setState((s) => ({ worksIndex: (s.worksIndex + 1) % 4 })); },
+    };
+  }
+}
+</script>
+</body>
+</html>
