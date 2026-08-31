@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23fbfbfe'/><path d='M11 8v16M11 16l8-8M11 16l9 8' stroke='%234f5ac7' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<title>Kotaro Ozawa — Portfolio</title>
 <script src="./support.js"></script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="761c9463-2d4a-4f2d-b25e-075c0bac91d2"></script>
 </head>
 <body>
 <x-dc>
@@ -1069,14 +1072,18 @@ class Component extends DCLogic {
    * 空文字にすると、フォームの内容を本文に入れてメーラーを起動するフォールバックに切り替わります。
    */
   /**
-   * microCMS の接続先。
-   * ブラウザから直接APIを叩くため、このキーは配信されるHTMLに含まれます。
-   * 必ず microCMS 側で「GETのみ」に権限を絞った参照専用キーを使ってください
-   * （書き込み権限付きのキーを置くと、誰でも記事を書き換えられます）。
-   * 空にすると下の初期データがそのまま表示されます。
+   * microCMS の読み込み先。
+   *
+   * 本番（Netlify）では Functions のプロキシ経由で取得する。APIキーは Netlify の
+   * 環境変数から Functions 側だけが読むので、配信されるファイルには一切残らない。
+   *
+   * MICROCMS_DOMAIN / MICROCMS_KEY はプロキシが使えない環境用の直接続の保険。
+   * 値を入れるとHTMLにキーが露出するので、本番では空のままにしておくこと。
+   * どちらも取得できなければ、下の初期データがそのまま表示される。
    */
-  static MICROCMS_DOMAIN = 'e0zqcccmnl';
-  static MICROCMS_KEY = 'b2HozJqLCDgnmqkdUXiqoiTD8Cg7IkcgptYL';
+  static MICROCMS_PROXY = '/.netlify/functions/microcms';
+  static MICROCMS_DOMAIN = '';
+  static MICROCMS_KEY = '';
 
   /** APIが未設定・到達不能なときに表示する内容 */
   static WORKS_FALLBACK = [
@@ -1613,13 +1620,35 @@ class Component extends DCLogic {
   get works() { return this.state.works || Component.WORKS_FALLBACK; }
   get news() { return this.state.news || Component.NEWS_FALLBACK; }
 
+  // 取得先そのものが無いのは想定内。それ以外だけ知らせる
+  cmsWarn(endpoint, e) {
+    const msg = String((e && e.message) || e);
+    if (/取得先がありません|Failed to fetch/.test(msg)) return;
+    console.warn('microCMS ' + endpoint + ':', msg);
+  }
+
   initMicroCMS() {
     const domain = Component.MICROCMS_DOMAIN, key = Component.MICROCMS_KEY;
-    if (!domain || !key) return;
-    const get = (endpoint) => fetch(
-      'https://' + domain + '.microcms.io/api/v1/' + endpoint + '?limit=100',
-      { headers: { 'X-MICROCMS-API-KEY': key } }
-    ).then((r) => { if (!r.ok) throw new Error(endpoint + ' ' + r.status); return r.json(); });
+    // file:// で直接開いた場合は取得先が無く、コンソールにエラーが並ぶだけなので
+    // 最初から取りにいかない（初期データがそのまま表示される）
+    const served = location.protocol === 'http:' || location.protocol === 'https:';
+    const proxy = served ? Component.MICROCMS_PROXY : '';
+    if (!proxy && !(served && domain && key)) return;
+
+    // まず Functions 経由。使えない環境（ローカルで素のサーバーを立てている等）だけ
+    // 直接続にフォールバックする。
+    const get = (endpoint) => {
+      const direct = () => {
+        if (!domain || !key) throw new Error(endpoint + ': 取得先がありません');
+        return fetch('https://' + domain + '.microcms.io/api/v1/' + endpoint + '?limit=100',
+          { headers: { 'X-MICROCMS-API-KEY': key } })
+          .then((r) => { if (!r.ok) throw new Error(endpoint + ' ' + r.status); return r.json(); });
+      };
+      if (!proxy) return direct();
+      return fetch(proxy + '?endpoint=' + endpoint)
+        .then((r) => { if (!r.ok) throw new Error('proxy ' + r.status); return r.json(); })
+        .catch(direct);
+    };
 
     get('works').then((d) => {
       const items = (d.contents || [])
@@ -1636,7 +1665,7 @@ class Component extends DCLogic {
           image: (w.image && w.image.url) || (typeof w.image === 'string' ? w.image : ''),
         }));
       if (items.length) { this.setState({ works: items, worksIndex: 0 }); this.resetWorksTimer(); }
-    }).catch((e) => console.warn('microCMS works:', e.message));
+    }).catch((e) => this.cmsWarn('works', e));
 
     get('news').then((d) => {
       const items = (d.contents || [])
@@ -1650,7 +1679,7 @@ class Component extends DCLogic {
           summary: n.summary || '',
         }));
       if (items.length) this.setState({ news: items });
-    }).catch((e) => console.warn('microCMS news:', e.message));
+    }).catch((e) => this.cmsWarn('news', e));
   }
 
   // ---- Profile の写真（タッチ端末） ---------------------------------------

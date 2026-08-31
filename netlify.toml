@@ -1,0 +1,6 @@
+# ビルド工程が無い静的サイトなので、公開ディレクトリはリポジトリ直下。
+# microCMS の APIキーは Functions 側からのみ読むため、環境変数
+# MICROCMS_SERVICE_DOMAIN / MICROCMS_API_KEY を Netlify に設定しておく。
+[build]
+  publish = "."
+  functions = "netlify/functions"
