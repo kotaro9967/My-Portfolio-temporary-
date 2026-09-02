@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kotaro9967.github.io/My-Portfolio-temporary-/sitemap-index.xml

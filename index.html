@@ -527,7 +527,7 @@
 
 <header data-site-header style="position: sticky; top: 0; z-index: 20; background: rgba(251,251,254,.86); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(85,96,206,.16);">
   <div style="max-width: 1440px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 78px); height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
-    <a class="site-logo" href="/" aria-label="Kotaro Ozawa ポートフォリオ トップへ">
+    <a class="site-logo" href="/My-Portfolio-temporary-/" aria-label="Kotaro Ozawa ポートフォリオ トップへ">
       <span class="site-logo__name">Kotaro Ozawa</span>
       <span class="site-logo__sub">PORTFOLIO</span>
     </a>
@@ -625,7 +625,7 @@
             <span class="mask-wipe" aria-hidden="true"></span>
           </div>
           <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 28px; text-wrap: pretty;">東京理科大学経営学部の学生です。経営とITの両輪で、中小企業のWeb活用を伴走支援しています。</p>
-          <a class="btn" href="/works" style="align-self: flex-start;">
+          <a class="btn" href="/My-Portfolio-temporary-/works" style="align-self: flex-start;">
             VIEW MY WORKS
             <span class="btn__arrow" aria-hidden="true"></span>
           </a>
@@ -939,7 +939,7 @@
           <span class="mask-wipe" aria-hidden="true"></span>
         </div>
         <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; text-wrap: pretty;">これまでに制作したWebサイトやデザインの一部をご紹介します。</p>
-        <a class="btn" href="/works">
+        <a class="btn" href="/My-Portfolio-temporary-/works">
           VIEW ALL WORKS
           <span class="btn__arrow" aria-hidden="true"></span>
         </a>
@@ -981,7 +981,7 @@
           <span class="mask-wipe" aria-hidden="true"></span>
         </div>
         <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; text-wrap: pretty;">活動内容やお知らせ、制作の裏側などを発信しています。</p>
-        <a class="btn" href="/news">
+        <a class="btn" href="/My-Portfolio-temporary-/news">
           VIEW ALL NEWS
           <span class="btn__arrow" aria-hidden="true"></span>
         </a>
@@ -1087,20 +1087,20 @@ class Component extends DCLogic {
 
   /** APIが未設定・到達不能なときに表示する内容 */
   static WORKS_FALLBACK = [
-    { slug: '/works/design-studio-website', title: 'Design Studio Website', tag: 'Webサイト', category: 'Web Design',
+    { slug: '/My-Portfolio-temporary-/works/design-studio-website', title: 'Design Studio Website', tag: 'Webサイト', category: 'Web Design',
       note: 'corporate site photo', gradient: 'linear-gradient(150deg,#EDEFFB,#E4E8F9)', image: '' },
-    { slug: '/works/travel-app-uiux', title: 'Travel App UI/UX', tag: 'アプリ UI/UX', category: 'UI/UX Design',
+    { slug: '/My-Portfolio-temporary-/works/travel-app-uiux', title: 'Travel App UI/UX', tag: 'アプリ UI/UX', category: 'UI/UX Design',
       note: 'app screens mockup', gradient: 'linear-gradient(150deg,#EEEBFB,#E6E9FA)', image: '' },
-    { slug: '/works/coffee-brand-site', title: 'Coffee Brand Site', tag: 'ブランドサイト', category: 'Branding / Web',
+    { slug: '/My-Portfolio-temporary-/works/coffee-brand-site', title: 'Coffee Brand Site', tag: 'ブランドサイト', category: 'Branding / Web',
       note: 'brand shooting photo', gradient: 'linear-gradient(150deg,#EFEDF9,#E8E5F6)', image: '' },
-    { slug: '/works/recruit-site-renewal', title: 'Recruit Site Renewal', tag: '採用サイト', category: 'Web Design',
+    { slug: '/My-Portfolio-temporary-/works/recruit-site-renewal', title: 'Recruit Site Renewal', tag: '採用サイト', category: 'Web Design',
       note: 'recruit site capture', gradient: 'linear-gradient(150deg,#ECEFFA,#E3E7F7)', image: '' },
   ];
   static NEWS_FALLBACK = [
-    { slug: '/news/2025-05-20-corporate-site', date: '2025.05.20', category: 'PICK UP', title: 'コーポレートサイトを制作しました',
+    { slug: '/My-Portfolio-temporary-/news/2025-05-20-corporate-site', date: '2025.05.20', category: 'PICK UP', title: 'コーポレートサイトを制作しました',
       summary: '創業50年の製造業様のコーポレートサイトを全面リニューアル。取材から撮影、CMS導入まで一貫して担当しました。' },
-    { slug: '/news/2025-04-15-portfolio-renewal', date: '2025.04.15', category: 'NEWS', title: 'ポートフォリオサイトをリニューアルしました', summary: '' },
-    { slug: '/news/2025-03-01-design-inspiration', date: '2025.03.01', category: 'BLOG', title: 'デザインのインスピレーション源について', summary: '' },
+    { slug: '/My-Portfolio-temporary-/news/2025-04-15-portfolio-renewal', date: '2025.04.15', category: 'NEWS', title: 'ポートフォリオサイトをリニューアルしました', summary: '' },
+    { slug: '/My-Portfolio-temporary-/news/2025-03-01-design-inspiration', date: '2025.03.01', category: 'BLOG', title: 'デザインのインスピレーション源について', summary: '' },
   ];
 
   static FORM_ENDPOINT = 'https://formspree.io/f/moeaazvd';
@@ -1655,7 +1655,7 @@ class Component extends DCLogic {
         .filter((w) => !w.draft && w.featured !== false)
         .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
         .map((w) => ({
-          slug: w.externalUrl || ('/works/' + w.id),
+          slug: w.externalUrl || ('/My-Portfolio-temporary-/works/' + w.id),
           external: !!w.externalUrl,
           title: w.title || '',
           tag: w.tag || '',
@@ -1672,7 +1672,7 @@ class Component extends DCLogic {
         .filter((n) => !n.draft)
         .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
         .map((n) => ({
-          slug: '/news/' + n.id,
+          slug: '/My-Portfolio-temporary-/news/' + n.id,
           date: String(n.date || '').slice(0, 10).replace(/-/g, '.'),
           category: Array.isArray(n.category) ? n.category[0] : (n.category || 'NEWS'),
           title: n.title || '',
