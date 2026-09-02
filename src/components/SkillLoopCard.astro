@@ -1,0 +1,19 @@
+---
+import { skills } from '../data/site';
+
+interface Props {
+  item: (typeof skills.items)[number];
+  index: number;
+}
+
+const { item, index } = Astro.props;
+---
+
+<article class="skill-loop-card">
+  <span class="skill-loop-card__number">{String(index + 1).padStart(2, '0')}</span>
+  <img src={`/assets/${item.icon}`} alt="" width="32" height="32" loading="lazy" />
+  <h3>{item.title.map((line, i) => <Fragment>{i > 0 && <br />}{line}</Fragment>)}</h3>
+  <p>{item.text}</p>
+  <div class="skill-loop-card__detail"><div><p>{item.detail}</p></div></div>
+  <div class="chip-row">{item.tags.map((tag) => <span class="chip">{tag}</span>)}</div>
+</article>

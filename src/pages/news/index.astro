@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content';
+import PageShell from '../../components/PageShell.astro';
+import PageHead from '../../components/PageHead.astro';
+import NewsRow from '../../components/NewsRow.astro';
+import { site, news } from '../../data/site';
+
+const items = (await getCollection('news', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<PageShell title={`News | ${site.name}`} description={news.lead}>
+  <PageHead eyebrow="NEWS" title="Latest News" lead={news.lead} />
+
+  <div class="archive" data-reveal>
+    <p class="archive__count">{items.length} POSTS</p>
+    <div class="card news__list">
+      {items.map((entry) => <NewsRow entry={entry} />)}
+    </div>
+  </div>
+</PageShell>

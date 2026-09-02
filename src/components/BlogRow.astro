@@ -1,0 +1,25 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'articles'>;
+}
+
+const { entry } = Astro.props;
+const { title, description, category, publishedAt, slug } = entry.data;
+const iso = publishedAt.toISOString().slice(0, 10);
+const label = iso.replace(/-/g, '.');
+---
+
+<article class="blog-row">
+  <p class="blog-row__meta">
+    <time datetime={iso}>{label}</time>
+    <span>{category}</span>
+  </p>
+  <h2 class="blog-row__title"><a href={`/blog/${slug}`}>{title}</a></h2>
+  <p class="blog-row__description">{description}</p>
+  <a class="blog-row__link" href={`/blog/${slug}`} aria-label={`${title}を読む`}>
+    READ ARTICLE
+    <span class="arrow arrow--row" aria-hidden="true"></span>
+  </a>
+</article>

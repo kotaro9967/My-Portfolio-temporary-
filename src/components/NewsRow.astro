@@ -1,0 +1,21 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'news'>;
+}
+
+const { entry } = Astro.props;
+const { title, date, category } = entry.data;
+
+const iso = date.toISOString().slice(0, 10);
+const label = iso.replace(/-/g, '.');
+const variant = category.toLowerCase();
+---
+
+<a class="news__row" href={`/news/${entry.id}`}>
+  <time class="news__date" datetime={iso}>{label}</time>
+  <span class={`news__cat news__cat--${variant}`}>{category}</span>
+  <span class="news__title">{title}</span>
+  <span class="arrow arrow--row" aria-hidden="true"></span>
+</a>

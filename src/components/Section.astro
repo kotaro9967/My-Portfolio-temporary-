@@ -1,0 +1,55 @@
+---
+interface Props {
+  id: string;
+  number: string;
+  label: string;
+  /** 見出し。配列を渡すと改行して表示します */
+  title: string | readonly string[];
+  titleClass?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  nextHref?: string;
+  nextLabel?: string;
+}
+
+const { id, number, label, title, titleClass = '', ctaLabel, ctaHref, nextHref, nextLabel } = Astro.props;
+const lines = Array.isArray(title) ? title : [title];
+---
+
+<section id={id} class="section" data-reveal>
+  <div class="section__tick" aria-hidden="true"></div>
+
+  <div class="section__rail" aria-hidden="true">
+    <span>{number}</span>
+    <span>{label}</span>
+  </div>
+
+  <div class="section__body">
+    <div class="section__intro">
+      <div class="mask-host" data-mask-host>
+        <h2 class:list={['section__title', titleClass]}>
+          {lines.map((line, i) => (<>{i > 0 && <br />}{line}</>))}
+        </h2>
+        <span class="mask-wipe" aria-hidden="true"></span>
+      </div>
+      <slot name="intro" />
+      {
+        ctaLabel && ctaHref && (
+          <a class="ghost-btn" href={ctaHref}>
+            {ctaLabel}
+            <span class="arrow" aria-hidden="true" />
+          </a>
+        )
+      }
+    </div>
+
+    <slot />
+  </div>
+
+  {nextHref && nextLabel && (
+    <a class="next-cue" href={nextHref}>
+      <span>NEXT — {nextLabel}</span>
+      <span class="next-cue__circle" aria-hidden="true"><span></span></span>
+    </a>
+  )}
+</section>

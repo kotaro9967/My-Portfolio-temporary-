@@ -1,0 +1,29 @@
+name: Weekly Netlify build
+
+on:
+  schedule:
+    # 毎週月曜 09:00 JST（GitHub ActionsのcronはUTC）
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: weekly-netlify-build
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify build hook
+        env:
+          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -z "$NETLIFY_BUILD_HOOK" ]; then
+            echo "NETLIFY_BUILD_HOOK secret is not configured."
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --data '{"source":"github-weekly-schedule"}' \
+            "$NETLIFY_BUILD_HOOK"

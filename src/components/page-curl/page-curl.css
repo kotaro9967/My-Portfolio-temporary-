@@ -1,0 +1,98 @@
+/* page-curl — 紙めくり演出のスタイル。色は 2 変数だけ上書きすれば足ります。 */
+
+.pc {
+  --pc-paper: #fbfbfe;          /* 紙の色 */
+  --pc-ink: 63, 69, 100;        /* 影に使う色 (R,G,B) */
+  --pc-accent: #8a93e4;         /* ヒントとエッジの色 */
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+/* 表面（ヒーローそのもの）。clip-path は JS が毎フレーム書き換える。
+   root（.pc）と寸法を完全に一致させる必要がある（clip-path の座標計算が
+   root.getBoundingClientRect() 基準のため）。余白・最大幅は中の
+   .pc__sheet-inner 側で吸収する。 */
+.pc__sheet {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--pc-paper);
+  filter: drop-shadow(3px 3px 16px rgba(var(--pc-ink), 0.16));
+  will-change: clip-path;
+}
+
+/* ヒーローは画面いっぱいに背景画像を敷きたいので、余白なしで .pc__sheet と同じ大きさにする */
+.pc__sheet-inner {
+  height: 100%;
+}
+
+/* めくれて立ち上がる裏面 */
+.pc__flap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(315deg, #f3f4fb 0%, #fafaff 26%, #fff 62%, #f6f7fd 100%);
+  filter: drop-shadow(6px 6px 20px rgba(var(--pc-ink), 0.22));
+  will-change: clip-path;
+}
+
+/* 折れ線に対する鏡像変換をかける入れ物 */
+.pc__flap-inner {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* 裏写り（表面の複製）。濃さは JS の showThrough が opacity を設定 */
+.pc__flap-ghost {
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  filter: blur(0.4px);
+}
+
+/* 折り目付近の陰り */
+.pc__flap-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(315deg, rgba(79, 90, 199, 0.12) 0%, rgba(79, 90, 199, 0.03) 14%, rgba(255, 255, 255, 0) 34%);
+}
+
+/* 右下の角に沿って斜めに置く SCROLL ヒント */
+.pc__hint {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: var(--pc-accent);
+  transform-origin: 100% 100%;
+  rotate: -45deg;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  animation: pcHintPulse 2.6s ease-in-out infinite;
+}
+
+.pc__hint::after {
+  content: "";
+  width: 20px;
+  height: 1px;
+  background: var(--pc-accent);
+}
+
+@keyframes pcHintPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc__hint { animation: none; }
+}

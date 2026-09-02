@@ -1,0 +1,86 @@
+---
+/**
+ * PageCurl — ヒーローを紙に見立てて、右下からめくって次セクションへ渡すオーバーレイ。
+ *
+ * 使い方 (src/pages/index.astro):
+ *   <PageCurl>
+ *     <Hero />
+ *   </PageCurl>
+ *   <Profile />  ← めくれると現れる本文側。DOM の順序はそのまま。
+ */
+import './page-curl.css';
+
+interface Props {
+  /** この px 分ホイール／スワイプすると完全にめくり切る（スクロール量に比例） */
+  scrollDistance?: number;
+  /** 一回の入力量がこれ以上なら「強いスクロール」とみなして自動で最後までめくる */
+  flickThreshold?: number;
+  /** 静止時に折れている右下の三角の一辺 (px) */
+  idleCorner?: number;
+  /** 裏面に透ける表面の濃さ (0–0.4) */
+  showThrough?: number;
+  /** ページ先頭で上スクロールすると元に戻す */
+  allowReverse?: boolean;
+  /** めくり終盤で表示する固定ヘッダーのセレクタ（不要なら null） */
+  headerSelector?: string | null;
+}
+
+const {
+  scrollDistance = 4200,
+  flickThreshold = 190,
+  idleCorner = 46,
+  showThrough = 0.14,
+  allowReverse = true,
+  headerSelector = '[data-site-header]',
+} = Astro.props;
+---
+
+<div
+  class="pc"
+  data-page-curl
+  data-scroll-distance={String(scrollDistance)}
+  data-flick-threshold={String(flickThreshold)}
+  data-idle-corner={String(idleCorner)}
+  data-show-through={String(showThrough)}
+  data-allow-reverse={String(allowReverse)}
+  data-header-selector={headerSelector ?? ''}
+>
+  <div class="pc__sheet">
+    <div class="pc__sheet-inner">
+      <slot />
+    </div>
+  </div>
+  <div class="pc__hint" aria-hidden="true">SCROLL</div>
+</div>
+
+<script>
+  import { initPageCurl } from './page-curl.js';
+
+  const root = document.querySelector<HTMLElement>('[data-page-curl]');
+  if (root) {
+    const d = root.dataset;
+    const header = d.headerSelector ? document.querySelector<HTMLElement>(d.headerSelector) : null;
+
+    initPageCurl(root, {
+      scrollDistance: Number(d.scrollDistance ?? 4200),
+      flickThreshold: Number(d.flickThreshold ?? 190),
+      idleCorner: Number(d.idleCorner ?? 46),
+      showThrough: Number(d.showThrough ?? 0.14),
+      allowReverse: d.allowReverse !== 'false',
+      // ヒーロー中はヘッダーを隠し、めくり終盤でスライドインさせる
+      onProgress(p) {
+        if (!header) return;
+        const show = p > 0.55;
+        header.style.transform = show ? 'translateY(0)' : 'translateY(-101%)';
+        header.style.opacity = show ? '1' : '0';
+      },
+      onOpen() {
+        document.querySelector('#profile')?.setAttribute('tabindex', '-1');
+      },
+      onClose() {
+        // ヒーローに戻ったことを他コンポーネント（バッジの再表示など）に知らせる
+        window.dispatchEvent(new CustomEvent('pagecurl:close'));
+      },
+    });
+  }
+</script>

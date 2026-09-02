@@ -1,0 +1,43 @@
+---
+import { getCollection } from 'astro:content';
+import Section from './Section.astro';
+import { works } from '../data/site';
+
+const items = (await getCollection('works', ({ data }) => !data.draft && data.featured)).sort((a, b) => a.data.order - b.data.order).slice(0, 4);
+---
+
+<Section id="works" number="03" label="WORKS" title="Recent Works" ctaLabel="VIEW ALL WORKS" ctaHref="/works" nextHref="#news" nextLabel="04 NEWS">
+  <p class="section__lead" slot="intro">{works.lead}</p>
+  <div class="works-deck" data-works-deck>
+    <div class="works-deck__cards" role="region" aria-label="制作事例カルーセル">
+      {items.map((entry, index) => {
+        const { title, tag, category, note, image, gradient, externalUrl } = entry.data;
+        const href = externalUrl ?? `/works/${entry.id}`;
+        return <a class="deck-card" href={href} data-deck-card data-index={index} style={`--deck-bg:${gradient}`}>
+          <div class="deck-card__shot"><div class="deck-card__shot-inner"><img src={image} alt="" loading="lazy" /><span>{tag}</span>{note && <small>{note}</small>}</div></div>
+          <div class="deck-card__body"><h3>{title}</h3><span class="chip">{category}</span></div>
+        </a>;
+      })}
+    </div>
+    <div class="works-deck__progress"><span data-deck-progress></span></div>
+    <div class="works-deck__controls"><button type="button" data-deck-prev aria-label="前の実績">←</button><span data-deck-counter>01 / {String(items.length).padStart(2, '0')}</span><button type="button" data-deck-next aria-label="次の実績">→</button></div>
+  </div>
+</Section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-works-deck]');
+  const cards = Array.from(root?.querySelectorAll<HTMLElement>('[data-deck-card]') || []);
+  const counter = root?.querySelector<HTMLElement>('[data-deck-counter]');
+  const progress = root?.querySelector<HTMLElement>('[data-deck-progress]');
+  let index = 0;
+  let timer = 0;
+  const paint = () => {
+    cards.forEach((card, cardIndex) => card.dataset.diff = String((cardIndex - index + cards.length) % cards.length));
+    if (counter) counter.textContent = `${String(index + 1).padStart(2, '0')} / ${String(cards.length).padStart(2, '0')}`;
+    if (progress) { progress.classList.remove('run'); void progress.offsetWidth; progress.classList.add('run'); }
+  };
+  const start = () => { window.clearInterval(timer); if (cards.length > 1) timer = window.setInterval(() => { index = (index + 1) % cards.length; paint(); }, 5000); };
+  root?.querySelector('[data-deck-prev]')?.addEventListener('click', () => { index = (index + cards.length - 1) % cards.length; paint(); start(); });
+  root?.querySelector('[data-deck-next]')?.addEventListener('click', () => { index = (index + 1) % cards.length; paint(); start(); });
+  paint(); start();
+</script>

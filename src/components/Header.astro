@@ -1,0 +1,49 @@
+---
+import { site, nav } from '../data/site';
+---
+
+<header class="site-header" data-site-header>
+  <div class="site-header__inner">
+    <a class="brand" href="/">
+      <span class="brand__name">{site.name}</span>
+      <span class="brand__tag">{site.tagline}</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span></span>
+      <span class="visually-hidden">メニューを開閉</span>
+    </button>
+
+    <nav class="nav" id="site-nav" aria-label="メインナビゲーション">
+      {nav.map((item) => <a class="nav__link" href={item.href}>{item.label}</a>)}
+      <a class="nav__cta" href="#contact">
+        CONTACT
+        <span class="arrow arrow--sm"></span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle');
+  const menu = document.querySelector<HTMLElement>('#site-nav');
+
+  if (toggle && menu) {
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      menu.dataset.open = String(open);
+    };
+
+    toggle.addEventListener('click', () => {
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    menu.addEventListener('click', (event) => {
+      if ((event.target as HTMLElement).closest('a')) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') setOpen(false);
+    });
+  }
+</script>
