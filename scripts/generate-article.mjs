@@ -50,8 +50,10 @@ const article = await generateArticle(keyword, config);
 validateArticle(article);
 
 const created = await saveDraft(article, config);
+console.log(`記事タイトル: ${article.title}`);
+console.log(`対象キーワード: ${article.keyword}`);
 console.log(`microCMSへ下書き保存しました: ${created.id}`);
-console.log('Netlifyの再ビルドは週次スケジュールで実行されます。');
+console.log('公開後、GitHub PagesまたはNetlifyのビルドでサイトへ反映されます。');
 
 async function generateArticle(inputKeyword, currentConfig) {
   const schema = {
