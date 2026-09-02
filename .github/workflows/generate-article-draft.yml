@@ -54,4 +54,4 @@ jobs:
           MICROCMS_SERVICE_DOMAIN: e0zqcccmnl
           MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
           MICROCMS_ARTICLES_ENDPOINT: articles
-        run: npm run article:generate -- "$ARTICLE_KEYWORD"
+        run: node scripts/generate-article.mjs "$ARTICLE_KEYWORD"
