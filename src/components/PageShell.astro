@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import DotField from './DotField.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="page">
+    <DotField />
+    <div class="blueprint-grid" aria-hidden="true"></div>
+
+    <Header />
+
+    <nav class="sec-nav" aria-label="ページ内セクション">
+      {[
+        ['01', 'PROFILE', 'profile'],
+        ['02', 'SKILLS', 'skills'],
+        ['03', 'WORKS', 'works'],
+        ['04', 'NEWS', 'news'],
+        ['05', 'CONTACT', 'contact'],
+      ].map(([number, label, id]) => (
+        <a class="sec-nav__item" href={`/#${id}`} data-sec-link={id}>
+          <span>{number}</span><span class="sec-nav__label">{label}</span><i></i>
+        </a>
+      ))}
+    </nav>
+
+    <main class="shell" id="top">
+      <slot />
+      <Footer />
+    </main>
+  </div>
+</BaseLayout>
+
+<script>
+  // スクロールに応じたセクションのフェードイン & 見出しのテキストリベール
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let pending = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal], .text-reveal'));
+
+  if (reduced) {
+    pending.forEach((el) => el.classList.add('is-visible'));
+  } else {
+    let ticking = false;
+
+    // 画面下 12% にかかった要素を表示。一気にスクロールしても取りこぼさない
+    const sweep = () => {
+      ticking = false;
+      const limit = window.innerHeight * 0.88;
+      pending = pending.filter((el) => {
+        if (el.getBoundingClientRect().top > limit) return true;
+        el.classList.add('is-visible');
+        return false;
+      });
+      if (!pending.length) {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+      }
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(sweep);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    sweep();
+
+    // 何らかの理由で発火しなかった場合の保険
+    window.addEventListener('load', () => setTimeout(sweep, 300));
+  }
+
+  const masks = Array.from(document.querySelectorAll<HTMLElement>('[data-mask-host]'));
+  if (reduced) {
+    masks.forEach((mask) => mask.classList.add('run'));
+  } else {
+    const maskObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        (entry.target as HTMLElement).classList.add('run');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.35 });
+    masks.forEach((mask) => maskObserver.observe(mask));
+  }
+
+  const sections = Array.from(document.querySelectorAll<HTMLElement>('.section[id]'));
+  const links = Array.from(document.querySelectorAll<HTMLElement>('[data-sec-link]'));
+  const paintSectionNav = () => {
+    let active = sections[0]?.id;
+    let best = Number.POSITIVE_INFINITY;
+    sections.forEach((section) => {
+      const distance = Math.abs(section.getBoundingClientRect().top - window.innerHeight * 0.42);
+      if (distance < best) { best = distance; active = section.id; }
+    });
+    links.forEach((link) => link.classList.toggle('is-active', link.dataset.secLink === active));
+  };
+  window.addEventListener('scroll', paintSectionNav, { passive: true });
+  paintSectionNav();
+</script>

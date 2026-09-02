@@ -1,0 +1,33 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'works'>;
+}
+
+const { entry } = Astro.props;
+const { title, tag, category, note, image, gradient, externalUrl } = entry.data;
+const href = externalUrl ?? `/works/${entry.id}`;
+const external = Boolean(externalUrl);
+---
+
+<a
+  class="card card--hover work-card"
+  href={href}
+  target={external ? '_blank' : undefined}
+  rel={external ? 'noopener noreferrer' : undefined}
+>
+  <div class="work-card__thumb" style={`background:${gradient}`}>
+    <img src={image} alt="" loading="lazy" />
+    <span class="work-card__tag">{tag}</span>
+    {note && <span class="work-card__note">{note}</span>}
+  </div>
+  <div class="work-card__body">
+    <h3 class="work-card__title">{title}</h3>
+    <div class="work-card__meta">
+      <span class="chip">{category}</span>
+      <img src="/assets/icon_external_link.png" alt="" width="16" height="16" loading="lazy" />
+      {external && <span class="visually-hidden">（外部サイトが開きます）</span>}
+    </div>
+  </div>
+</a>

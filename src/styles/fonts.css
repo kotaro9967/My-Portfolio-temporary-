@@ -1,0 +1,16 @@
+/* Quicksand — 見出し・ロゴ回り */
+@import '@fontsource/quicksand/300.css';
+@import '@fontsource/quicksand/400.css';
+@import '@fontsource/quicksand/500.css';
+@import '@fontsource/quicksand/600.css';
+@import '@fontsource/quicksand/700.css';
+
+/* Zen Kaku Gothic New — 本文 */
+@import '@fontsource/zen-kaku-gothic-new/300.css';
+@import '@fontsource/zen-kaku-gothic-new/400.css';
+@import '@fontsource/zen-kaku-gothic-new/500.css';
+@import '@fontsource/zen-kaku-gothic-new/700.css';
+
+/* JetBrains Mono — ラベル・数値まわり */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';

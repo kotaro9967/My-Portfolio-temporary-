@@ -1,0 +1,24 @@
+---
+interface Props {
+  eyebrow: string;
+  title: string;
+  lead?: string;
+  backHref?: string;
+  backLabel?: string;
+}
+
+const { eyebrow, title, lead, backHref = '/', backLabel = 'BACK TO HOME' } = Astro.props;
+---
+
+<header class="page-head">
+  <p class="page-head__eyebrow">{eyebrow}</p>
+  <h1 class="page-head__title text-reveal">
+    <span class="text-reveal__inner">{title}</span>
+    <span class="text-reveal__cover" aria-hidden="true"></span>
+  </h1>
+  {lead && <p class="page-head__lead">{lead}</p>}
+  <a class="page-head__back" href={backHref}>
+    <span class="arrow arrow--back" aria-hidden="true"></span>
+    {backLabel}
+  </a>
+</header>

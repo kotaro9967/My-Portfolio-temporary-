@@ -1,0 +1,43 @@
+---
+import Section from './Section.astro';
+import { profile } from '../data/site';
+
+interface Props { showCta?: boolean; }
+const { showCta = true } = Astro.props;
+---
+
+<Section id="profile" number="01" label="PROFILE" title="Profile"
+  ctaLabel={showCta ? 'VIEW MY WORKS' : undefined} ctaHref={showCta ? '/works' : undefined}
+  nextHref={showCta ? '#skills' : undefined} nextLabel={showCta ? '02 SKILLS' : undefined}>
+  <Fragment slot="intro">
+    <p class="profile__intro">{profile.intro}</p>
+    <p class="section__lead">東京理科大学経営学部の学生です。経営とITの両輪で、中小企業のWeb活用を伴走支援しています。</p>
+  </Fragment>
+
+  <div class="profile-bento">
+    <article class="profile-tile profile-tile--name"><span>NAME</span><strong>小澤 虎汰朗</strong><small>KOTARO OZAWA</small></article>
+    <article class="profile-tile profile-tile--location"><span>LOCATION</span><strong>Tokyo,<br />Japan</strong></article>
+    <figure class="profile-photo profile-photo--hobby"><img src="/assets/photo_gym_train.webp" alt="トレーニング中の様子" loading="lazy" /><figcaption>HOBBY — 筋トレ</figcaption></figure>
+    <article class="profile-tile profile-tile--skills"><span>SKILLS</span><strong>HTML / CSS / JS / TS / C# / Python / SQL / PostgreSQL / Azure</strong><p>Web制作、データ解析、システム開発まで。要件整理から公開後の運用までを一人で通せます。</p></article>
+    <img class="profile-bento__sketch" src="/assets/sketch_profile_alpha.webp" alt="" aria-hidden="true" loading="lazy" />
+    <figure class="profile-photo profile-photo--education"><img src="/assets/campus_a.webp" alt="東京理科大学 近代科学資料館" loading="lazy" /><figcaption><small>EDUCATION</small><strong>東京理科大学 経営学部<br />ビジネスエコノミクス学科 3年</strong></figcaption></figure>
+    <article class="profile-tile profile-tile--interest"><span>INTEREST</span><strong>デザイン / プログラミング / データ解析 / 筋トレ</strong></article>
+    <article class="profile-tile profile-tile--role"><span>ROLE</span><strong>Webデザイナー／学生</strong></article>
+    <article class="profile-tile profile-tile--message"><span>MESSAGE</span><strong>一つひとつの出会いを大切に、丁寧に取り組みます。</strong></article>
+    <figure class="profile-photo profile-photo--speaking"><img src="/assets/photo_speaking.webp" alt="勉強会で登壇している様子" loading="lazy" /><figcaption>SPEAKING — 基幹システム開発を解説</figcaption></figure>
+    <figure class="profile-photo profile-photo--lecture"><img src="/assets/photo_lecture.webp" alt="C#の基礎講座の様子" loading="lazy" /><figcaption>LECTURE — C#の基礎を勉強会で解説</figcaption></figure>
+  </div>
+
+  <div class="journey">
+    <div class="journey__head"><span>JOURNEY — 経営とITを、実務で結ぶまで</span><span>2024 → 2026</span></div>
+    <div class="journey__grid">
+      {profile.journey.map((item) => (
+        <article class:list={['journey__step', { 'is-current': 'now' in item && item.now }]}> 
+          <span class="journey__dot" aria-hidden="true"></span>
+          <div class="journey__year">{item.year}{'now' in item && item.now && <small>NOW</small>}</div>
+          <h3>{item.title}</h3><p>{item.body}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</Section>

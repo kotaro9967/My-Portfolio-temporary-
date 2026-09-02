@@ -1,0 +1,34 @@
+---
+import PageShell from '../components/PageShell.astro';
+import PageHead from '../components/PageHead.astro';
+import Profile from '../components/Profile.astro';
+import Skills from '../components/Skills.astro';
+import { site, profile } from '../data/site';
+---
+
+<PageShell title={`About | ${site.name}`} description={profile.body.slice(0, 110)}>
+  <PageHead
+    eyebrow="ABOUT"
+    title="About Me"
+    lead={profile.intro}
+  />
+
+  <Profile showCta={false} />
+  <Skills showCta={false} />
+
+  <section class="section" data-reveal>
+    <div class="section__tick" aria-hidden="true"></div>
+    <div class="section__rail" aria-hidden="true"><span>03</span><span>CONTACT</span></div>
+    <div class="section__body">
+      <div class="section__intro">
+        <h2 class="section__title">Get in Touch</h2>
+        <p class="section__lead">ご相談・お見積りは無料です。まずはお気軽にご連絡ください。</p>
+        <a class="ghost-btn" href="/#contact">
+          CONTACT ME
+          <span class="arrow" aria-hidden="true"></span>
+        </a>
+      </div>
+      <div></div>
+    </div>
+  </section>
+</PageShell>

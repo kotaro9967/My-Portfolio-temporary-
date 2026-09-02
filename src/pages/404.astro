@@ -1,0 +1,27 @@
+---
+import PageShell from '../components/PageShell.astro';
+import { site } from '../data/site';
+---
+
+<PageShell title={`404 | ${site.name}`} description="お探しのページは見つかりませんでした。">
+  <section class="notfound">
+    <p class="notfound__code">404</p>
+    <h1 class="notfound__title text-reveal">
+      <span class="text-reveal__inner">ページが見つかりません</span>
+      <span class="text-reveal__cover" aria-hidden="true"></span>
+    </h1>
+    <p class="notfound__lead">
+      URLが変更されたか、削除された可能性があります。トップページから探し直してください。
+    </p>
+    <div class="btn-row">
+      <a class="ghost-btn ghost-btn--filled" href="/">
+        BACK TO HOME
+        <span class="arrow arrow--deep" aria-hidden="true"></span>
+      </a>
+      <a class="ghost-btn" href="/works">
+        VIEW WORKS
+        <span class="arrow" aria-hidden="true"></span>
+      </a>
+    </div>
+  </section>
+</PageShell>

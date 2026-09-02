@@ -1,0 +1,110 @@
+---
+import { hero, site, profile } from '../data/site';
+import HeroSignature from './HeroSignature.astro';
+
+const { blueprint } = hero;
+
+const box = (w: { left: number; top: number; width_pct: number; height_pct: number }) =>
+  `left:${w.left}%;top:${w.top}%;width:${w.width_pct}%;height:${w.height_pct}%`;
+---
+
+<section class="hero" aria-label="トップビジュアル">
+  <div class="hero__measure" aria-hidden="true">
+    <span>24</span><span>32</span><span>48</span><span>48</span><span>48</span><span>16</span>
+  </div>
+
+  <div class="hero__canvas">
+    <div class="hero__rule hero__rule--left" aria-hidden="true"></div>
+    <div class="hero__rule hero__rule--right" aria-hidden="true"></div>
+
+    <picture class="hero__blueprint" style={box(blueprint)} data-hero-blueprint>
+      <source media="(max-width: 1000px)" srcset="/assets/hero_mobile.png" />
+      <source srcset={`/assets/${blueprint.src}.webp`} type="image/webp" />
+      <img
+        src={`/assets/${blueprint.src}.png`}
+        alt={blueprint.alt}
+        width={blueprint.width}
+        height={blueprint.height}
+        fetchpriority="high"
+        decoding="async"
+      />
+    </picture>
+
+    <div class="hero__badge hero__badge--ideas text-reveal" data-hero-badge>
+      <img class="text-reveal__inner" src="/assets/fresh-ideas-badge.png" alt="Fresh Ideas." loading="lazy" />
+      <span class="text-reveal__cover" aria-hidden="true"></span>
+    </div>
+    <div class="hero__badge hero__badge--student text-reveal" data-hero-badge>
+      <img
+        class="text-reveal__inner"
+        src="/assets/student-perspective-badge.png"
+        alt="Student Perspective"
+        loading="lazy"
+      />
+      <span class="text-reveal__cover" aria-hidden="true"></span>
+    </div>
+
+    <HeroSignature />
+  </div>
+
+  <p class="visually-hidden">{site.nameJa}／{profile.items[1].value[0]}。{profile.intro}</p>
+</section>
+
+<script>
+  const blueprint = document.querySelector<HTMLElement>('[data-hero-blueprint]');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // --sweep をアニメーションさせるには @property 対応が必要。
+  // 非対応ブラウザでは最初から全体を表示したままにする。
+  const canAnimate = typeof CSS !== 'undefined' && 'registerProperty' in CSS;
+
+  // 図面のスイープが完了したら他コンポーネント（署名アニメーション）に知らせる
+  const notifySweepDone = () => window.dispatchEvent(new CustomEvent('hero:sweep-done'));
+
+  if (!blueprint || reduced || !canAnimate) {
+    notifySweepDone();
+  } else {
+    blueprint.classList.add('is-drawing');
+    blueprint.addEventListener('animationend', notifySweepDone, { once: true });
+  }
+
+  if (blueprint && !reduced) {
+    // スクロールに応じたパララックス（元デザインの GSAP 相当）
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const progress = Math.min(1, Math.max(0, window.scrollY / 760));
+      blueprint.style.setProperty('--parallax', `${-60 * progress}px`);
+      blueprint.style.setProperty('--fade', String(1 - 0.55 * progress));
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+  }
+
+  // Fresh Ideas. / Student Perspective バッジは、署名アニメーション（KOTARO OZAWA）が
+  // 描き終わった直後に最後に自然に現れるようにする。
+  const badges = Array.from(document.querySelectorAll<HTMLElement>('[data-hero-badge]'));
+
+  if (badges.length) {
+    if (reduced) {
+      badges.forEach((el) => el.classList.add('is-visible'));
+    } else {
+      window.addEventListener(
+        'hero:signature-drawn',
+        () => {
+          badges.forEach((el, i) => {
+            window.setTimeout(() => el.classList.add('is-visible'), i * 180);
+          });
+        },
+        { once: true }
+      );
+    }
+  }
+
+  // ページめくりを閉じてヒーローに戻る際はめくり自体のアニメーションのみで、
+  // 図面・署名・バッジの再生は行わない（見た目はそのまま維持される）。
+</script>

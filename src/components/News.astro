@@ -1,0 +1,18 @@
+---
+import { getCollection } from 'astro:content';
+import Section from './Section.astro';
+import NewsRow from './NewsRow.astro';
+import { news } from '../data/site';
+
+const items = (await getCollection('news', ({ data }) => !data.draft)).sort((a, b) => b.data.date.getTime() - a.data.date.getTime()).slice(0, 4);
+const [featured, ...rest] = items;
+const featuredIso = featured?.data.date.toISOString().slice(0, 10);
+---
+
+<Section id="news" number="04" label="NEWS" title="Latest News" ctaLabel="VIEW ALL NEWS" ctaHref="/news" nextHref="#contact" nextLabel="05 CONTACT">
+  <p class="section__lead" slot="intro">{news.lead}</p>
+  <div class="news-featured-list">
+    {featured && <a class="news-featured" href={`/news/${featured.id}`}><p><time datetime={featuredIso}>{featuredIso?.replace(/-/g, '.')}</time><span>{featured.data.category}</span></p><h3>{featured.data.title}</h3><span class="news-featured__summary">制作活動やサイト運用についての最新情報をお知らせします。</span><span class="arrow arrow--row" aria-hidden="true"></span></a>}
+    {rest.length > 0 && <div class="card news__list">{rest.map((entry) => <NewsRow entry={entry} />)}</div>}
+  </div>
+</Section>

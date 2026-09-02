@@ -1,0 +1,20 @@
+---
+import Section from './Section.astro';
+import SkillLoopCard from './SkillLoopCard.astro';
+import { skills } from '../data/site';
+
+interface Props { showCta?: boolean; }
+const { showCta = true } = Astro.props;
+const left = skills.items.filter((_, index) => index % 2 === 0);
+const right = skills.items.filter((_, index) => index % 2 === 1);
+---
+
+<Section id="skills" number="02" label="SKILLS" title="What I Do"
+  ctaLabel={showCta ? 'VIEW ALL SKILLS' : undefined} ctaHref={showCta ? '/about#skills' : undefined}
+  nextHref={showCta ? '#works' : undefined} nextLabel={showCta ? '03 WORKS' : undefined}>
+  <p class="section__lead" slot="intro">{skills.lead}</p>
+  <div class="skills-loop" aria-label="提供できること">
+    <div class="skills-loop__col"><div class="skills-loop__track">{[...left, ...left].map((item, index) => <SkillLoopCard item={item} index={(index * 2) % skills.items.length} />)}</div></div>
+    <div class="skills-loop__col skills-loop__col--reverse"><div class="skills-loop__track">{[...right, ...right].map((item, index) => <SkillLoopCard item={item} index={((index * 2) + 1) % skills.items.length} />)}</div></div>
+  </div>
+</Section>

@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content';
+import PageShell from '../../components/PageShell.astro';
+import PageHead from '../../components/PageHead.astro';
+import BlogRow from '../../components/BlogRow.astro';
+import { site, blog } from '../../data/site';
+
+const articles = (await getCollection('articles')).sort(
+  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime()
+);
+---
+
+<PageShell title={`Blog | ${site.name}`} description={blog.lead}>
+  <PageHead eyebrow="BLOG" title="Insights" lead={blog.lead} />
+
+  <div class="archive" data-reveal>
+    <p class="archive__count">{articles.length} ARTICLES</p>
+    <div class="blog-list">
+      {articles.map((entry) => <BlogRow entry={entry} />)}
+    </div>
+  </div>
+</PageShell>

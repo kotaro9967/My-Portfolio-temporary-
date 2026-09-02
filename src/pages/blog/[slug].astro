@@ -1,0 +1,40 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import PageShell from '../../components/PageShell.astro';
+import { site } from '../../data/site';
+
+export const getStaticPaths = (async () => {
+  const articles = await getCollection('articles');
+  return articles.map((entry) => ({ params: { slug: entry.data.slug }, props: { entry } }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const { title, description, category, publishedAt } = entry.data;
+const { Content } = await render(entry);
+const iso = publishedAt.toISOString().slice(0, 10);
+const label = iso.replace(/-/g, '.');
+---
+
+<PageShell title={`${title} | ${site.name}`} description={description}>
+  <article class="detail detail--narrow">
+    <p class="detail__eyebrow">
+      <time datetime={iso}>{label}</time>
+      <span class="news__cat news__cat--blog">{category}</span>
+    </p>
+    <h1 class="detail__title text-reveal">
+      <span class="text-reveal__inner">{title}</span>
+      <span class="text-reveal__cover" aria-hidden="true"></span>
+    </h1>
+    <p class="detail__summary">{description}</p>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <a class="ghost-btn" href="/blog">
+      VIEW ALL ARTICLES
+      <span class="arrow" aria-hidden="true"></span>
+    </a>
+  </article>
+</PageShell>
