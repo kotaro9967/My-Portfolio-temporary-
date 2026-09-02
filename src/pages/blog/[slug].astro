@@ -10,31 +10,129 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { entry } = Astro.props;
-const { title, description, category, publishedAt } = entry.data;
+const { title, description, category, publishedAt, updatedAt, slug } = entry.data;
 const { Content } = await render(entry);
 const iso = publishedAt.toISOString().slice(0, 10);
 const label = iso.replace(/-/g, '.');
+const updatedIso = updatedAt.toISOString().slice(0, 10);
+const related = (await getCollection('articles'))
+  .filter((item) => item.data.slug !== slug)
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
+  .slice(0, 3);
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://kotaro-ozawa-portfolio.netlify.app');
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  datePublished: iso,
+  dateModified: updatedIso,
+  author: { '@type': 'Person', name: 'Kotaro Ozawa' },
+  mainEntityOfPage: canonical.toString(),
+};
 ---
 
 <PageShell title={`${title} | ${site.name}`} description={description}>
-  <article class="detail detail--narrow">
-    <p class="detail__eyebrow">
-      <time datetime={iso}>{label}</time>
-      <span class="news__cat news__cat--blog">{category}</span>
-    </p>
-    <h1 class="detail__title text-reveal">
-      <span class="text-reveal__inner">{title}</span>
-      <span class="text-reveal__cover" aria-hidden="true"></span>
-    </h1>
-    <p class="detail__summary">{description}</p>
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <div class="reading-progress" aria-hidden="true"><span data-reading-progress></span></div>
 
-    <div class="prose">
-      <Content />
+  <article class="article-detail">
+    <header class="article-hero">
+      <p class="detail__eyebrow">
+        <time datetime={iso}>{label}</time>
+        <span class="news__cat news__cat--blog">{category}</span>
+      </p>
+      <h1 class="detail__title text-reveal">
+        <span class="text-reveal__inner">{title}</span>
+        <span class="text-reveal__cover" aria-hidden="true"></span>
+      </h1>
+      <p class="detail__summary">{description}</p>
+      <div class="article-hero__note">
+        <span>POINT</span>
+        <p>この記事では、検討時に迷いやすいポイントを順番に整理します。</p>
+      </div>
+    </header>
+
+    <div class="article-layout">
+      <aside class="article-sidebar">
+        <nav class="article-toc" aria-label="目次" data-article-toc>
+          <p>CONTENTS</p>
+          <ol></ol>
+        </nav>
+        <div class="article-author">
+          <span>WRITTEN BY</span>
+          <strong>Kotaro Ozawa</strong>
+          <p>学生・若者の視点とWeb技術を活かし、中小企業の情報発信を支援しています。</p>
+        </div>
+      </aside>
+
+      <div class="article-main">
+        <div class="prose" data-article-body>
+          <Content />
+        </div>
+
+        <section class="article-cta" aria-labelledby="article-cta-title">
+          <span>FREE CONSULTATION</span>
+          <h2 id="article-cta-title">ホームページ・採用ページ・CMSをまとめて相談できます</h2>
+          <p>ご相談・お見積もりは無料です。まだ要件が固まっていない段階でも、お気軽にご相談ください。</p>
+          <a class="ghost-btn ghost-btn--filled" href="/#contact">無料で相談する <i class="arrow arrow--row"></i></a>
+        </section>
+
+        <div class="article-back">
+          <a class="ghost-btn" href="/blog">
+            VIEW ALL ARTICLES
+            <span class="arrow" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
     </div>
 
-    <a class="ghost-btn" href="/blog">
-      VIEW ALL ARTICLES
-      <span class="arrow" aria-hidden="true"></span>
-    </a>
+    {related.length > 0 && (
+      <section class="article-related" aria-labelledby="related-title">
+        <p>KEEP READING</p>
+        <h2 id="related-title">関連記事</h2>
+        <div>
+          {related.map((item, index) => (
+            <a href={`/blog/${item.data.slug}`}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <strong>{item.data.title}</strong>
+              <i class="arrow arrow--row"></i>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
   </article>
 </PageShell>
+
+<script>
+  const body = document.querySelector<HTMLElement>('[data-article-body]');
+  const toc = document.querySelector<HTMLElement>('[data-article-toc]');
+  const list = toc?.querySelector('ol');
+  const headings = body ? Array.from(body.querySelectorAll<HTMLHeadingElement>('h2')) : [];
+
+  headings.forEach((heading, index) => {
+    const id = `section-${index + 1}`;
+    heading.id = id;
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = `#${id}`;
+    link.textContent = heading.textContent;
+    item.appendChild(link);
+    list?.appendChild(item);
+  });
+
+  if (!headings.length) toc?.setAttribute('hidden', '');
+
+  const progress = document.querySelector<HTMLElement>('[data-reading-progress]');
+  const updateProgress = () => {
+    if (!body || !progress) return;
+    const start = body.getBoundingClientRect().top + window.scrollY;
+    const end = start + body.offsetHeight - window.innerHeight;
+    const ratio = end <= start ? 1 : Math.min(1, Math.max(0, (window.scrollY - start) / (end - start)));
+    progress.style.transform = `scaleX(${ratio})`;
+  };
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  window.addEventListener('resize', updateProgress);
+  updateProgress();
+</script>
