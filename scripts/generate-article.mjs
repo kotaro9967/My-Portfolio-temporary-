@@ -1,5 +1,30 @@
 import { createHash } from 'node:crypto';
 
+const ALLOWED_HTML_TAGS = new Set([
+  'h2',
+  'h3',
+  'p',
+  'ul',
+  'ol',
+  'li',
+  'strong',
+  'em',
+  'blockquote',
+  'a',
+  'br',
+  'hr',
+  'code',
+  'pre',
+  'table',
+  'thead',
+  'tbody',
+  'tr',
+  'th',
+  'td',
+]);
+
+const DANGEROUS_HTML_TAGS = new Set(['script', 'style', 'iframe', 'object', 'embed', 'form']);
+
 const keyword = process.argv.slice(2).join(' ').trim();
 
 if (!keyword) {
@@ -51,7 +76,7 @@ async function generateArticle(inputKeyword, currentConfig) {
         '検索読者の疑問を具体的に解決し、誠実で読みやすいSEO記事を作成してください。',
         '事実確認できない統計、実績、料金、顧客事例は創作しないでください。',
         '本文はHTMLで、h1・html・body・script・styleタグを使わず、h2から始めてください。',
-        '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a です。',
+        '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a, br, hr, code, pre, table, thead, tbody, tr, th, td です。',
         '本文末尾に「まとめ」のh2を置き、読者に自然な相談導線を示してください。',
       ].join('\n'),
       input: [
@@ -87,6 +112,7 @@ async function generateArticle(inputKeyword, currentConfig) {
 
   return {
     ...parsed,
+    body: normalizeArticleHtml(parsed.body),
     slug: normalizeSlug(parsed.slug, inputKeyword),
     keyword: inputKeyword,
     generatedByAI: true,
@@ -118,21 +144,10 @@ function validateArticle(article) {
   const errors = [];
   const plainText = article.body.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
   const h2Count = (article.body.match(/<h2(?:\s[^>]*)?>/gi) || []).length;
-  const allowedTags = new Set([
-    'h2',
-    'h3',
-    'p',
-    'ul',
-    'ol',
-    'li',
-    'strong',
-    'em',
-    'blockquote',
-    'a',
-  ]);
   const usedTags = [...article.body.matchAll(/<\/?([a-z][a-z0-9-]*)\b[^>]*>/gi)].map((match) =>
     match[1].toLowerCase()
   );
+  const unsupportedTags = [...new Set(usedTags.filter((tag) => !ALLOWED_HTML_TAGS.has(tag)))];
 
   if (article.title.length < 12 || article.title.length > 70) errors.push('titleは12〜70文字');
   if (article.description.length < 60 || article.description.length > 140) {
@@ -143,14 +158,33 @@ function validateArticle(article) {
   if (/<(?:script|style|iframe|object|embed|form)\b/i.test(article.body)) {
     errors.push('禁止HTMLタグを含めない');
   }
-  if (usedTags.some((tag) => !allowedTags.has(tag))) {
-    errors.push('許可されていないHTMLタグを含めない');
+  if (unsupportedTags.length) {
+    errors.push(`許可されていないHTMLタグ: ${unsupportedTags.join(', ')}`);
   }
   if (/\son[a-z]+\s*=|javascript:/i.test(article.body)) {
     errors.push('イベント属性やjavascript URLを含めない');
   }
 
   if (errors.length) fail(`品質チェックに失敗しました: ${errors.join(' / ')}`);
+}
+
+function normalizeArticleHtml(value) {
+  const html = String(value || '')
+    .trim()
+    .replace(/^```html\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .replace(/<h1\b[^>]*>/gi, '<h2>')
+    .replace(/<\/h1>/gi, '</h2>')
+    .replace(/<h[4-6]\b[^>]*>/gi, '<h3>')
+    .replace(/<\/h[4-6]>/gi, '</h3>');
+
+  return html.replace(/<\/?([a-z][a-z0-9-]*)\b[^>]*>/gi, (tagMarkup, tagName) => {
+    const normalizedTag = tagName.toLowerCase();
+    if (ALLOWED_HTML_TAGS.has(normalizedTag) || DANGEROUS_HTML_TAGS.has(normalizedTag)) {
+      return tagMarkup;
+    }
+    return '';
+  });
 }
 
 function normalizeSlug(value, source) {
