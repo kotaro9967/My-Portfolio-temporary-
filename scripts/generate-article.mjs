@@ -1,4 +1,9 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+
+const brandProfile = JSON.parse(
+  readFileSync(new URL('../config/article-brand-profile.json', import.meta.url), 'utf8')
+);
 
 const ALLOWED_HTML_TAGS = new Set([
   'h2',
@@ -78,10 +83,12 @@ async function generateArticle(inputKeyword, currentConfig) {
         '本文はHTMLで、h1・html・body・script・styleタグを使わず、h2から始めてください。',
         '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a, br, hr, code, pre, table, thead, tbody, tr, th, td です。',
         '本文末尾に「まとめ」のh2を置き、読者に自然な相談導線を示してください。',
+        '以下のブランド情報は、記事テーマに関係する範囲だけ自然に使用してください。宣伝を過剰に繰り返さないでください。',
+        JSON.stringify(brandProfile, null, 2),
       ].join('\n'),
       input: [
         `対象キーワード: ${inputKeyword}`,
-        '対象サイト: 学生フリーランスによる中小企業向けホームページ制作ポートフォリオ',
+        `対象サイト: ${brandProfile.serviceName}`,
         '記事の長さ: 日本語本文2500〜4500文字を目安',
         'slug: 内容を表す短い英小文字・数字・ハイフンのみ',
         'description: 検索結果向けに70〜120文字',
