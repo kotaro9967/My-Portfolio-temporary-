@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/restore-legacy-home.mjs",
     "preview": "astro preview",
     "article:generate": "node --env-file=.env scripts/generate-article.mjs",
     "astro": "astro"
