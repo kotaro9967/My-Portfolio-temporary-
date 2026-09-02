@@ -1,0 +1,68 @@
+name: Weekly article drafts
+
+on:
+  schedule:
+    # 毎週月曜 09:00 JST
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: weekly-article-drafts
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate three article drafts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5-mini
+          MICROCMS_SERVICE_DOMAIN: e0zqcccmnl
+          MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
+          MICROCMS_ARTICLES_ENDPOINT: articles
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ARTICLE_SUMMARY_FILE: weekly-article-summary.md
+        run: node scripts/generate-weekly-articles.mjs
+
+      - name: Notify review request
+        if: always()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const succeeded = '${{ job.status }}' === 'success';
+            const body = fs.existsSync('weekly-article-summary.md')
+              ? fs.readFileSync('weekly-article-summary.md', 'utf8')
+              : `記事生成処理が途中で停止しました。\n\n[実行ログを確認する](${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+            const date = new Intl.DateTimeFormat('ja-JP', {
+              timeZone: 'Asia/Tokyo',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            }).format(new Date());
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `AI記事レビュー ${date} ${succeeded ? '（3件完成）' : '（要確認）'}`,
+              body,
+              assignees: [context.repo.owner],
+            });
