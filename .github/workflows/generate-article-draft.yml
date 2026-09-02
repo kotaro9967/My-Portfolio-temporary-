@@ -1,0 +1,57 @@
+name: Generate article draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      keyword:
+        description: SEO記事の対象キーワード
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: generate-article-draft
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check required secrets
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY is not configured."
+            exit 1
+          fi
+          if [ -z "$MICROCMS_API_KEY" ]; then
+            echo "MICROCMS_API_KEY is not configured."
+            exit 1
+          fi
+
+      - name: Generate and save draft
+        env:
+          ARTICLE_KEYWORD: ${{ inputs.keyword }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5-mini
+          MICROCMS_SERVICE_DOMAIN: e0zqcccmnl
+          MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
+          MICROCMS_ARTICLES_ENDPOINT: articles
+        run: npm run article:generate -- "$ARTICLE_KEYWORD"
