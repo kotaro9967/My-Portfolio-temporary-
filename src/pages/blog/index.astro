@@ -2,21 +2,70 @@
 import { getCollection } from 'astro:content';
 import PageShell from '../../components/PageShell.astro';
 import PageHead from '../../components/PageHead.astro';
-import BlogRow from '../../components/BlogRow.astro';
 import { site, blog } from '../../data/site';
 
 const articles = (await getCollection('articles')).sort(
   (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime()
 );
+const [featured, ...rest] = articles;
+const dateLabel = (date: Date) => date.toISOString().slice(0, 10).replace(/-/g, '.');
 ---
 
 <PageShell title={`Blog | ${site.name}`} description={blog.lead}>
   <PageHead eyebrow="BLOG" title="Insights" lead={blog.lead} />
 
   <div class="archive" data-reveal>
-    <p class="archive__count">{articles.length} ARTICLES</p>
-    <div class="blog-list">
-      {articles.map((entry) => <BlogRow entry={entry} />)}
+    <div class="blog-archive__head">
+      <p class="archive__count">{articles.length} ARTICLES</p>
+      <p>中小企業のWeb制作・採用・運用を、実務に使える言葉で。</p>
     </div>
+
+    {featured ? (
+      <a class="blog-featured-card" href={`/blog/${featured.data.slug}`}>
+        <div class="blog-featured-card__visual" aria-hidden="true">
+          <span>FEATURED</span>
+          <strong>01</strong>
+          <i></i>
+        </div>
+        <div class="blog-featured-card__content">
+          <p class="blog-card__meta">
+            <time datetime={featured.data.publishedAt.toISOString().slice(0, 10)}>{dateLabel(featured.data.publishedAt)}</time>
+            <span>{featured.data.category}</span>
+          </p>
+          <h2>{featured.data.title}</h2>
+          <p>{featured.data.description}</p>
+          <span class="blog-card__read">READ FEATURE <i class="arrow arrow--row"></i></span>
+        </div>
+      </a>
+    ) : (
+      <div class="blog-empty">
+        <p>記事を準備しています。</p>
+        <span>新しい記事の公開まで、しばらくお待ちください。</span>
+      </div>
+    )}
+
+    {rest.length > 0 && (
+      <div class="blog-card-grid">
+        {rest.map((entry, index) => (
+          <article class="blog-card">
+            <a href={`/blog/${entry.data.slug}`}>
+              <div class={`blog-card__visual blog-card__visual--${index % 3}`} aria-hidden="true">
+                <span>INSIGHT</span>
+                <strong>{String(index + 2).padStart(2, '0')}</strong>
+              </div>
+              <div class="blog-card__body">
+                <p class="blog-card__meta">
+                  <time datetime={entry.data.publishedAt.toISOString().slice(0, 10)}>{dateLabel(entry.data.publishedAt)}</time>
+                  <span>{entry.data.category}</span>
+                </p>
+                <h2>{entry.data.title}</h2>
+                <p>{entry.data.description}</p>
+                <span class="blog-card__read">READ ARTICLE <i class="arrow arrow--row"></i></span>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    )}
   </div>
 </PageShell>
