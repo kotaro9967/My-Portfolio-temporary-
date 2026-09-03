@@ -5,6 +5,13 @@ import { writeFile } from 'node:fs/promises';
 const brandProfile = JSON.parse(
   readFileSync(new URL('../config/article-brand-profile.json', import.meta.url), 'utf8')
 );
+const referenceKeywords = readFileSync(
+  new URL('../config/article-keywords.txt', import.meta.url),
+  'utf8'
+)
+  .split(/\r?\n/)
+  .map((line) => line.trim())
+  .filter((line) => line && !line.startsWith('#'));
 
 const config = {
   openaiApiKey: requiredEnv('OPENAI_API_KEY'),
@@ -25,7 +32,7 @@ const usedTopics = [
   ...previousIssueKeywords,
 ];
 
-const keywords = await chooseKeywords(usedTopics, config);
+const keywords = await chooseKeywords(referenceKeywords, usedTopics, config);
 const results = [];
 
 for (const keyword of keywords) {
@@ -56,7 +63,7 @@ const successCount = results.filter((result) => result.success).length;
 console.log(`週次記事生成: ${successCount}/${results.length}件成功`);
 if (successCount !== 3) process.exitCode = 1;
 
-async function chooseKeywords(usedTopics, currentConfig) {
+async function chooseKeywords(referenceKeywords, usedTopics, currentConfig) {
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
@@ -68,6 +75,8 @@ async function chooseKeywords(usedTopics, currentConfig) {
       instructions: [
         'あなたは中小企業向けWeb制作サービスのSEO編集長です。',
         '毎週生成する記事の検索キーワードを、重複なく3件選んでください。',
+        'ユーザー提供の参考キーワードを企画の最優先情報として扱ってください。',
+        '参考キーワードはそのまま選んでも、検索意図を保った具体的なロングテールへ展開しても構いません。',
         '3件は「採用・若者への訴求」「CMS・運用」「Web制作の課題解決」から原則1件ずつ選んでください。',
         '費用・相場キーワードに偏らないでください。地域名を機械的に組み合わせないでください。',
         '検索者の具体的な悩みが分かり、サービス相談へ自然につながる日本語キーワードにしてください。',
@@ -75,6 +84,7 @@ async function chooseKeywords(usedTopics, currentConfig) {
       ].join('\n'),
       input: [
         `サービス情報:\n${JSON.stringify(brandProfile, null, 2)}`,
+        `ユーザー提供の参考キーワード:\n${referenceKeywords.join('\n') || '未登録'}`,
         `使用済み・候補済みテーマ:\n${usedTopics.slice(-100).join('\n') || 'なし'}`,
       ].join('\n\n'),
       text: {
@@ -102,6 +112,11 @@ async function chooseKeywords(usedTopics, currentConfig) {
   });
 
   const payload = await readJson(response, 'OpenAIキーワード選定');
+  if (payload.usage) {
+    console.log(
+      `キーワード選定のOpenAI使用量: input ${payload.usage.input_tokens ?? 0} / output ${payload.usage.output_tokens ?? 0} tokens`
+    );
+  }
   const parsed = JSON.parse(extractOutputText(payload));
   const unique = [...new Set(parsed.keywords.map((value) => String(value).trim()).filter(Boolean))];
   if (unique.length !== 3) throw new Error('重複のないキーワードを3件取得できませんでした。');
