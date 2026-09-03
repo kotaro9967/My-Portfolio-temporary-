@@ -109,6 +109,11 @@ async function generateArticle(inputKeyword, currentConfig) {
   });
 
   const payload = await readJson(response, 'OpenAI API');
+  if (payload.usage) {
+    console.log(
+      `OpenAI使用量: input ${payload.usage.input_tokens ?? 0} / output ${payload.usage.output_tokens ?? 0} tokens`
+    );
+  }
   const outputText = extractOutputText(payload);
   if (!outputText) fail('OpenAI APIの応答に記事本文がありません。');
 
