@@ -1,5 +1,15 @@
 # SEOの設定・運用
 
+## kotaro.tokyo への切り替え
+
+- 本番の正規URLは `https://kotaro.tokyo`。Search Consoleのドメイン所有権確認は完了済み（本人の確認画面による）。確認用TXTレコードは削除しない。
+- `config/seo.mjs` と `public/robots.txt` を更新済み。次回のビルドでcanonical、OG URL、構造化データ、サイトマップ、robotsに新ドメインが反映される。コード更新だけでは公開サイトへの反映は完了しない。
+- NetlifyのDomain managementで `kotaro.tokyo` がPrimary domainであること、HTTPSが有効であることを確認する。旧Netlify URLが新ドメインの同じパスへ転送されることも確認する。管理画面の状態を未確認のまま強制転送を追加しない。
+- Netlifyの追加デプロイは実行せず、既存の週次公開で反映する。GitHub Pagesは従来どおり閲覧可能で、次回のPagesビルドから新ドメインをcanonicalにする。
+- 反映後に `https://kotaro.tokyo/sitemap-index.xml` を開き、参照先のsitemapにも `https://kotaro.tokyo/` のURLが並んでいることを確認する。
+- Search Consoleの `kotaro.tokyo` プロパティ → サイトマップへ、`https://kotaro.tokyo/sitemap-index.xml` を送信する。続いてURL検査でホーム、`/services/`、公開済み代表記事を確認する。
+- サイトマップ送信・本番の転送とHTTPSの確認・インデックス確認はまだ未実施。所有権確認はインデックス登録や検索上位表示を保証しない。
+
 ## 今回の実装
 
 - 正規URLは `config/seo.mjs` の productionOrigin に集約。GitHub Pagesは閲覧用のコピーとして本番URLをcanonicalで示す。

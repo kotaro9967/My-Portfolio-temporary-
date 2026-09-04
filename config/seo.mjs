@@ -1,6 +1,6 @@
-// 独自ドメイン取得後は productionOrigin を変更し、旧URLの転送も設定してください。
+// 本番の正規URL。NetlifyのPrimary domainもこのホストに揃えてください。
 export const seo = {
-  productionOrigin: 'https://kotaro-ozawa-portfolio.netlify.app',
+  productionOrigin: 'https://kotaro.tokyo',
   pagesBase: '/My-Portfolio-temporary-',
   name: '小澤虎汰朗',
   title: '東京周辺の中小企業向けホームページ・採用ページ制作 | 小澤虎汰朗',

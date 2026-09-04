@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://kotaro-ozawa-portfolio.netlify.app/sitemap-index.xml
+Sitemap: https://kotaro.tokyo/sitemap-index.xml
