@@ -18,6 +18,11 @@ if (process.env.GITHUB_PAGES !== 'true') {
 }
 const escape = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const preview = ['deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT ?? '');
+// Keep the original layout; distinguish template samples from paid client work.
+homeHtml = homeHtml
+  .replace(/Recent Works/g, '参考サンプル')
+  .replace(/これまでに制作したWebサイトやデザインの一部をご紹介します。/g,
+    '現在掲載している内容は参考用のサンプルです。お客様から受託・納品した制作実績ではありません。');
 homeHtml = homeHtml.replace(/<html\b[^>]*>/i, '<html lang="ja">');
 homeHtml = homeHtml.replace(/<head>([\s\S]*?)<\/head>/i, (_, head) => {
   const cleaned = head.replace(/<title>[\s\S]*?<\/title>/gi, '')

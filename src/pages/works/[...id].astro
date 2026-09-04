@@ -19,13 +19,14 @@ const others = (await getCollection('works', ({ data, id }) => !data.draft && id
   .slice(0, 3);
 ---
 
-<PageShell title={`${title} | ${site.name}`} description={summary}>
+<PageShell title={`${title}（参考サンプル） | ${site.name}`} description={`実案件ではない参考サンプルです。${summary}`}>
   <article class="detail">
     <p class="detail__eyebrow">WORKS / {category}</p>
     <h1 class="detail__title text-reveal">
       <span class="text-reveal__inner">{title}</span>
       <span class="text-reveal__cover" aria-hidden="true"></span>
     </h1>
+    <p class="detail__summary"><strong>参考サンプル：お客様からの受託・納品実績ではありません。</strong>本文中の設定や期間は実案件の記録ではなく、成果を示すものではありません。</p>
     <p class="detail__summary">{summary}</p>
 
     <div class="detail__hero card" style={`background:${gradient}`}>
@@ -68,7 +69,7 @@ const others = (await getCollection('works', ({ data, id }) => !data.draft && id
       </dl>
     </div>
 
-    <nav class="detail__more" aria-label="他の制作事例">
+    <nav class="detail__more" aria-label="他の参考サンプル">
       <h2 class="detail__more-title">Other Works</h2>
       <div class="archive__grid">
         {others.map((other) => <WorkCard entry={other} />)}

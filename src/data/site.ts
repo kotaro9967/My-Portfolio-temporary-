@@ -143,7 +143,7 @@ export const skills = {
 } as const;
 
 export const works = {
-  lead: 'これまでに制作したWebサイトやデザインの一部をご紹介します。',
+  lead: '現在掲載している内容は参考用のサンプルです。お客様から受託・納品した制作実績ではありません。',
 } as const;
 
 export const news = {
@@ -151,7 +151,7 @@ export const news = {
 } as const;
 
 export const blog = {
-  lead: 'ホームページ制作・集客・運用に役立つ情報を、実務目線で分かりやすく発信します。',
+  lead: 'ホームページ制作・集客・運用に役立つ情報を、分かりやすく発信します。',
 } as const;
 
 export const contact = {
