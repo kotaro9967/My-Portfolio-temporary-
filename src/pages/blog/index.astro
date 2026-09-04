@@ -11,8 +11,9 @@ const [featured, ...rest] = articles;
 const dateLabel = (date: Date) => date.toISOString().slice(0, 10).replace(/-/g, '.');
 ---
 
-<PageShell title={`Blog | ${site.name}`} description={blog.lead}>
+<PageShell title={`ホームページ制作・採用・CMS運用のブログ | ${site.name}`} description={blog.lead}>
   <PageHead eyebrow="BLOG" title="Insights" lead={blog.lead} />
+  <p><a href="/services/">ホームページ・採用ページ制作の内容と料金はこちら</a></p>
 
   <div class="archive" data-reveal>
     <div class="blog-archive__head">

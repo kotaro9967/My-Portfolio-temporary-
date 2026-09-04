@@ -1,0 +1,77 @@
+---
+import PageShell from '../components/PageShell.astro';
+import { seo, canonicalUrl, jsonLd } from '../../config/seo.mjs';
+const title = '中小企業のホームページ・採用ページ制作とCMS導入｜料金・制作の流れ';
+const description = '東京周辺の中小企業向けホームページ・採用ページ制作、CMS導入のご案内。基本制作10万〜15万円、納期約1か月が目安。対応範囲、維持費、公開までの流れを紹介します。相談・見積もりは無料です。';
+const schema = { '@context': 'https://schema.org', '@type': 'Service', name: '中小企業向けホームページ・採用ページ制作とCMS導入',
+  url: canonicalUrl('/services/'), description, provider: { '@id': `${seo.productionOrigin}/#person` }, areaServed: '東京周辺（オンライン完結の場合は遠方も相談可能）' };
+---
+<PageShell title={`${title} | ${seo.name}`} description={description}>
+  <script type="application/ld+json" set:html={jsonLd(schema)} />
+  <article class="services">
+    <header>
+      <p class="eyebrow">WEB DESIGN & DEVELOPMENT</p>
+      <h1>企業の魅力が伝わる<br />ホームページ・採用ページ制作</h1>
+      <p>東京周辺の中小企業を中心に、企画・デザイン・開発・公開を支援しています。学生・若者の視点で企業の魅力を整理し、CMSを使って社内でも情報を更新できるサイトを一緒につくります。</p>
+      <a class="ghost-btn ghost-btn--filled" href="/#contact">無料で相談する</a>
+    </header>
+    <nav class="topics" aria-label="サービスの目次">
+      <a href="#scope">できること</a><a href="#pricing">料金・維持費</a><a href="#process">制作の流れ</a><a href="#faq">よくある質問</a>
+    </nav>
+    <section id="scope">
+      <h2>ホームページ＋採用ページ＋CMSをまとめて相談</h2>
+      <div class="service-grid">
+        <div><h3>ホームページ制作</h3><p>会社情報や事業内容を整理し、初めて訪れた人にも強みと相談先が伝わる構成を考えます。パソコンとスマートフォンの両方で読みやすいサイトを制作します。</p></div>
+        <div><h3>採用ページ制作</h3><p>仕事内容・働く環境・会社の魅力を、応募を検討する人の視点から整理します。可能であれば現場を訪問し、言葉だけでは伝わりにくい魅力を探します。</p></div>
+        <div><h3>CMS導入・更新の仕組み</h3><p>会社情報、お知らせ、求人など、ご自身で変更したい項目を事前に決めます。例えば従業員数は1か所の管理画面から更新する設計にできます。公開への反映タイミングは運用に合わせて相談します。</p></div>
+        <div><h3>アクセス解析・独自システム</h3><p>Google Analyticsなどの分析ツール導入も相談できます。ブログ記事の自動生成など、独自システムの構築は別途見積もりです。集客数や採用数、検索順位を保証するものではありません。</p></div>
+      </div>
+    </section>
+    <section id="pricing">
+      <h2>料金・納期の目安</h2>
+      <dl>
+        <div><dt>基本的な制作料金</dt><dd>10万〜15万円が目安です。ページ数、必要な機能、原稿・写真の準備状況を確認して見積もりします。HP・採用ページ・CMSの具体的な対応範囲も見積もり時に明確にします。</dd></div>
+        <div><dt>公開後の維持費</dt><dd>基本構成では主にドメイン代です。利用サービスの無料枠、アクセス量、CMSの利用人数や更新頻度によって追加費用が発生する場合があります。</dd></div>
+        <div><dt>納期</dt><dd>約1か月が目安です。要件、素材の準備、確認の進み方、混雑状況によって延びる場合があります。</dd></div>
+        <div><dt>ご相談・お見積もり</dt><dd>無料です。まだ必要なページや予算が固まっていなくても相談できます。</dd></div>
+      </dl>
+    </section>
+    <section id="process">
+      <h2>相談から公開までの流れ</h2>
+      <ol>
+        <li><h3>目的と更新したい情報を整理</h3><p>問い合わせ、採用、会社紹介などの目的と、社内で更新したい項目を伺います。既存サイトがある場合はURLをお知らせください。</p></li>
+        <li><h3>内容・費用・スケジュールを確認</h3><p>ページ構成、担当する作業、原稿と写真の準備、維持費、CMSの権限と反映方法を確認します。</p></li>
+        <li><h3>構成・デザイン・実装</h3><p>企業の魅力が伝わる構成を考え、確認をいただきながら制作します。必要に応じて東京周辺での訪問やオンラインで打ち合わせします。</p></li>
+        <li><h3>公開前の確認と更新方法の共有</h3><p>表示・リンク・問い合わせ導線を確認して公開します。CMSの操作方法と、公開後の修正を誰が担当するかも共有します。</p></li>
+      </ol>
+    </section>
+    <section id="faq">
+      <h2>よくある質問</h2>
+      <h3>東京以外からも依頼できますか？</h3><p>基本は東京周辺での対応ですが、オンライン完結を希望する場合は遠方からの相談も可能です。訪問の可否は事前にご相談ください。</p>
+      <h3>公開後に会社側で文章や数字を変更できますか？</h3><p>CMSに登録した項目は会社側で変更できるように設計できます。従業員数、営業時間、求人情報など、頻繁に変わる項目を事前にお知らせください。レイアウト変更や機能追加は別途相談となります。</p>
+      <h3>毎月必ず保守料がかかりますか？</h3><p>基本構成では維持費を主にドメイン代に抑える設計が可能です。ただし、サービス利用条件や必要なサポート、独自システムによって費用は変わります。見積もり時に確認します。</p>
+      <h3>検索順位や応募数は上がりますか？</h3><p>検索エンジンに内容を伝える基本設定や、情報の整理・更新しやすさを考慮して制作します。ただし、順位や応募数は競合や情報の質などにも左右されるため保証していません。</p>
+    </section>
+    <section class="article-cta">
+      <h2>まずは、いま困っていることからお聞かせください</h2>
+      <p>「会社の情報を自分たちで更新したい」「採用ページを充実させたい」など、具体的な悩みから相談できます。ご相談・お見積もりは無料です。</p>
+      <a class="ghost-btn ghost-btn--filled" href="/#contact">無料相談・見積もりへ</a>
+      <p><a href="/works/">制作実績を見る</a> ／ <a href="/about/">制作者について</a> ／ <a href="/blog/">制作・採用・運用のブログ</a></p>
+    </section>
+  </article>
+</PageShell>
+<style>
+  .services { padding: 48px 0 80px; max-width: 1000px; margin: auto; font-size: 16px; line-height: 2; }
+  h1 { font-size: clamp(28px, 4vw, 44px); line-height: 1.55; color: var(--accent); }
+  h2 { font-size: clamp(23px, 3vw, 30px); line-height: 1.6; color: var(--ink-strong); }
+  h3 { font-size: 19px; color: var(--ink-strong); line-height: 1.6; }
+  section { margin-top: 64px; scroll-margin-top: 100px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .1em; }
+  .topics { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 24px 0; margin-top: 30px; border-block: 1px solid var(--line); }
+  .service-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .service-grid > div { padding: 24px; border: 1px solid var(--line); background: white; border-radius: 16px; }
+  dl > div { padding: 20px 0; border-bottom: 1px solid var(--line); }
+  dt { font-weight: 700; color: var(--accent); } dd { margin: 8px 0 0; }
+  ol { padding-left: 24px; } li { padding-left: 8px; margin-bottom: 24px; }
+  @media (max-width: 680px) { .service-grid { grid-template-columns: 1fr; } }
+</style>

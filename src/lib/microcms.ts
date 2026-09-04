@@ -9,7 +9,7 @@ export const client = serviceDomain && apiKey ? createClient({ serviceDomain, ap
 /**
  * microCMSのリスト形式APIをAstro Content Layerのコレクションとして読み込むloader。
  * .env に MICROCMS_SERVICE_DOMAIN / MICROCMS_API_KEY が未設定の場合は空コレクションになる
- * （ビルド自体は失敗させない。設定後に `npm run dev` を再起動すると反映される）。
+ * ローカルは空のまま確認できる。本番・Actionsは設定不足で空のブログを公開しない。
  */
 export function microCMSLoader(endpoint: string): Loader {
   return {
@@ -18,21 +18,23 @@ export function microCMSLoader(endpoint: string): Loader {
       store.clear();
 
       if (!client) {
+        if (process.env.NETLIFY === 'true' || process.env.GITHUB_ACTIONS === 'true') {
+          throw new Error('CMS接続設定がありません。空のサイトを公開しないためビルドを停止しました。MICROCMS_SERVICE_DOMAIN / MICROCMS_API_KEY を確認してください。');
+        }
         logger.warn(
           `MICROCMS_SERVICE_DOMAIN / MICROCMS_API_KEY が未設定のため "${endpoint}" は空のまま読み込みをスキップしました。`
         );
         return;
       }
 
-      const { contents } = await client.getList<Record<string, unknown>>({
+      const contents = await client.getAllContents<Record<string, unknown>>({
         endpoint,
-        queries: { limit: 100 },
       });
 
       for (const item of contents) {
         const { id, body, ...rest } = item as { id: string; body?: string } & Record<string, unknown>;
         const data = await parseData({ id, data: rest });
-        const digest = generateDigest(data);
+        const digest = generateDigest({ ...data, body });
         store.set({
           id,
           data,

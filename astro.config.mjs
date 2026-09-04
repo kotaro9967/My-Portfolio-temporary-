@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import { seo } from './config/seo.mjs';
 
 const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 
@@ -7,10 +8,11 @@ const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 export default defineConfig({
   site: isGitHubPages
     ? 'https://kotaro9967.github.io'
-    : 'https://kotaro-ozawa-portfolio.netlify.app',
+    : seo.productionOrigin,
+  trailingSlash: 'always',
   base: isGitHubPages ? '/My-Portfolio-temporary-' : '/',
   // GitHub Pages のサブディレクトリに置く場合は base: '/repo-name' を指定
-  integrations: [sitemap()],
+  integrations: [sitemap({ filter: (page) => !page.endsWith('/404.html') })],
   build: {
     inlineStylesheets: 'auto',
   },

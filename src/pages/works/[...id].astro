@@ -29,7 +29,7 @@ const others = (await getCollection('works', ({ data, id }) => !data.draft && id
     <p class="detail__summary">{summary}</p>
 
     <div class="detail__hero card" style={`background:${gradient}`}>
-      <img src={image} alt="" />
+      <img src={image} alt={`${title}の制作画面`} decoding="async" />
       <span class="work-card__tag">{tag}</span>
     </div>
 

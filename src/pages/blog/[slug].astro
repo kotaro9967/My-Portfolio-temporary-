@@ -3,37 +3,46 @@ import { getCollection, render } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import PageShell from '../../components/PageShell.astro';
 import { site } from '../../data/site';
+import { canonicalUrl, seo, jsonLd } from '../../../config/seo.mjs';
 
 export const getStaticPaths = (async () => {
   const articles = await getCollection('articles');
+  const slugs = new Set<string>();
+  for (const { data } of articles) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug) || slugs.has(data.slug)) {
+      throw new Error(`記事slugが不正または重複しています: ${data.slug}`);
+    }
+    slugs.add(data.slug);
+  }
   return articles.map((entry) => ({ params: { slug: entry.data.slug }, props: { entry } }));
 }) satisfies GetStaticPaths;
 
 const { entry } = Astro.props;
-const { title, description, category, publishedAt, updatedAt, slug } = entry.data;
+const { title, description, category, publishedAt, updatedAt, slug, generatedByAI } = entry.data;
 const { Content } = await render(entry);
 const iso = publishedAt.toISOString().slice(0, 10);
 const label = iso.replace(/-/g, '.');
 const updatedIso = updatedAt.toISOString().slice(0, 10);
 const related = (await getCollection('articles'))
   .filter((item) => item.data.slug !== slug)
-  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
+  .sort((a, b) => Number(b.data.category === category) - Number(a.data.category === category) || b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
   .slice(0, 3);
-const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://kotaro-ozawa-portfolio.netlify.app');
+const canonical = canonicalUrl(Astro.url.pathname);
 const articleSchema = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: title,
   description,
-  datePublished: iso,
-  dateModified: updatedIso,
-  author: { '@type': 'Person', name: 'Kotaro Ozawa' },
-  mainEntityOfPage: canonical.toString(),
+  datePublished: publishedAt.toISOString(),
+  dateModified: updatedAt.toISOString(),
+  inLanguage: 'ja',
+  author: { '@type': 'Person', '@id': `${seo.productionOrigin}/#person`, name: seo.name, url: canonicalUrl('/about/') },
+  mainEntityOfPage: canonical,
 };
 ---
 
-<PageShell title={`${title} | ${site.name}`} description={description}>
-  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+<PageShell title={`${title} | ${site.name}`} description={description} article publishedTime={publishedAt.toISOString()} modifiedTime={updatedAt.toISOString()}>
+  <script type="application/ld+json" set:html={jsonLd(articleSchema)} />
   <div class="reading-progress" aria-hidden="true"><span data-reading-progress></span></div>
 
   <article class="article-detail">
@@ -42,6 +51,7 @@ const articleSchema = {
         <time datetime={iso}>{label}</time>
         <span class="news__cat news__cat--blog">{category}</span>
       </p>
+      {updatedIso !== iso && <p>最終更新：<time datetime={updatedAt.toISOString()}>{updatedIso.replace(/-/g, '.')}</time></p>}
       <h1 class="detail__title text-reveal">
         <span class="text-reveal__inner">{title}</span>
         <span class="text-reveal__cover" aria-hidden="true"></span>
@@ -61,7 +71,7 @@ const articleSchema = {
         </nav>
         <div class="article-author">
           <span>WRITTEN BY</span>
-          <strong>Kotaro Ozawa</strong>
+          <a href="/about/"><strong>小澤虎汰朗 / Kotaro Ozawa</strong></a>
           <p>学生・若者の視点とWeb技術を活かし、中小企業の情報発信を支援しています。</p>
         </div>
       </aside>
@@ -70,12 +80,14 @@ const articleSchema = {
         <div class="prose" data-article-body>
           <Content />
         </div>
+        {generatedByAI && <p class="article-editorial-note">この記事はAIを活用して作成しています。料金やサービスの条件は変更される場合があります。依頼を検討する際は、<a href="/services/">制作サービスの案内</a>と個別のお見積もりをご確認ください。</p>}
 
         <section class="article-cta" aria-labelledby="article-cta-title">
           <span>FREE CONSULTATION</span>
           <h2 id="article-cta-title">ホームページ・採用ページ・CMSをまとめて相談できます</h2>
           <p>ご相談・お見積もりは無料です。まだ要件が固まっていない段階でも、お気軽にご相談ください。</p>
           <a class="ghost-btn ghost-btn--filled" href="/#contact">無料で相談する <i class="arrow arrow--row"></i></a>
+          <p><a href="/services/">制作内容・料金・制作の流れを見る</a></p>
         </section>
 
         <div class="article-back">

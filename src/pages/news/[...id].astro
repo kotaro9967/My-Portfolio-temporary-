@@ -17,7 +17,7 @@ const iso = date.toISOString().slice(0, 10);
 const label = iso.replace(/-/g, '.');
 ---
 
-<PageShell title={`${title} | ${site.name}`}>
+<PageShell title={`${title} | ${site.name}`} description={`${label}のお知らせ「${title}」。${site.name}の活動・制作に関する情報をご案内します。`}>
   <article class="detail detail--narrow">
     <p class="detail__eyebrow">
       <time datetime={iso}>{label}</time>

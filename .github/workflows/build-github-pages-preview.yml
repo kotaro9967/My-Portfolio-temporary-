@@ -37,13 +37,17 @@ jobs:
           node scripts/prepare-github-pages.mjs
 
       - name: Copy static output into Pages root
-        run: cp -R dist/. .
+        run: |
+          # These directories contain generated pages only, never source/assets.
+          # Remove old output so unpublished/deleted CMS entries don't remain accessible.
+          git rm -r --ignore-unmatch -- _astro blog news works about services
+          cp -R dist/. .
 
       - name: Commit Pages output
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .nojekyll index.html support.js assets _astro blog news works about 404.html favicon.svg robots.txt sitemap-index.xml sitemap-*.xml
+          git add .nojekyll index.html support.js assets _astro blog news works about services 404.html favicon.svg robots.txt sitemap-index.xml sitemap-*.xml
           if git diff --cached --quiet; then
             echo "公開ファイルに変更はありません。"
             exit 0

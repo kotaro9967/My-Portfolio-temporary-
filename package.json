@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build && node scripts/restore-legacy-home.mjs",
+    "build": "node scripts/clean-output.mjs && astro build && node scripts/restore-legacy-home.mjs && node scripts/check-seo.mjs",
+    "seo:check": "node scripts/check-seo.mjs",
     "preview": "astro preview",
     "article:generate": "node --env-file=.env scripts/generate-article.mjs",
     "astro": "astro"

@@ -16,15 +16,7 @@ for (const file of await findHtmlFiles(outputDir)) {
   if (rewritten !== html) await writeFile(file, rewritten);
 }
 
-const robotsPath = resolve(outputDir, 'robots.txt');
-const robots = await readFile(robotsPath, 'utf8');
-await writeFile(
-  robotsPath,
-  robots.replace(
-    'https://kotaro-ozawa-portfolio.netlify.app/sitemap-index.xml',
-    'https://kotaro9967.github.io/My-Portfolio-temporary-/sitemap-index.xml'
-  )
-);
+// robots.txt and sitemap intentionally point to production, just like canonical tags.
 
 console.log('GitHub Pagesのサブディレクトリ用URLへ変換しました。');
 

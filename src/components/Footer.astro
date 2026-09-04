@@ -3,6 +3,12 @@ import { site } from '../data/site';
 ---
 
 <footer class="site-footer">
+  <nav aria-label="サイト内のご案内">
+    <a href="/services/">制作サービス・料金</a>
+    <a href="/about/">制作者について</a>
+    <a href="/blog/">ブログ</a>
+    <a href="/#contact">無料相談</a>
+  </nav>
   <span class="site-footer__copy">{site.copyright}</span>
   <a class="site-footer__top" href="#top">
     BACK TO TOP
@@ -11,3 +17,7 @@ import { site } from '../data/site';
     </span>
   </a>
 </footer>
+<style>
+  .site-footer { flex-wrap: wrap; }
+  nav { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 14px; }
+</style>

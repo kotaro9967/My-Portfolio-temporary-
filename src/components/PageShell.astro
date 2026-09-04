@@ -3,16 +3,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import DotField from './DotField.astro';
+import { canonicalUrl, jsonLd } from '../../config/seo.mjs';
 
 interface Props {
   title?: string;
   description?: string;
+  article?: boolean;
+  publishedTime?: string;
+  modifiedTime?: string;
 }
 
 const { title, description } = Astro.props;
+const path = new URL(canonicalUrl(Astro.url.pathname)).pathname;
+const sectionLabels: Record<string, string> = { blog: 'ブログ', services: '制作サービス・料金', about: '制作者について', works: '制作実績', news: 'お知らせ' };
+const section = path.split('/')[1];
+const crumbs = [{ name: 'ホーム', path: '/' }];
+if (sectionLabels[section]) {
+  crumbs.push({ name: sectionLabels[section], path: `/${section}/` });
+  if (path !== `/${section}/`) crumbs.push({ name: title?.split(' | ')[0] ?? sectionLabels[section], path });
+}
+const breadcrumbSchema = { '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+  itemListElement: crumbs.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.name, item: canonicalUrl(item.path) })) };
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout {...Astro.props}>
   <div class="page">
     <DotField />
     <div class="blueprint-grid" aria-hidden="true"></div>
@@ -34,11 +48,24 @@ const { title, description } = Astro.props;
     </nav>
 
     <main class="shell" id="top">
+      {crumbs.length > 1 && <>
+        <nav class="breadcrumbs" aria-label="パンくずリスト">
+          <ol>{crumbs.map((item, index) => <li>{index === crumbs.length - 1 ? <span aria-current="page">{item.name}</span> : <a href={item.path}>{item.name}</a>}</li>)}</ol>
+        </nav>
+        <script type="application/ld+json" set:html={jsonLd(breadcrumbSchema)} />
+      </>}
       <slot />
       <Footer />
     </main>
   </div>
 </BaseLayout>
+
+<style>
+  .breadcrumbs { padding-top: 24px; color: var(--ink-mute); font-size: 14px; }
+  .breadcrumbs ol { display: flex; flex-wrap: wrap; gap: 8px 12px; list-style: none; padding: 0; margin: 0; }
+  .breadcrumbs li { display: inline; overflow-wrap: anywhere; }
+  .breadcrumbs li + li::before { content: '/'; margin-right: 12px; color: var(--ink-faint); }
+</style>
 
 <script>
   // スクロールに応じたセクションのフェードイン & 見出しのテキストリベール
