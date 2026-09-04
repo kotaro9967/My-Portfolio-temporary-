@@ -6,7 +6,7 @@ import { works } from '../data/site';
 const items = (await getCollection('works', ({ data }) => !data.draft && data.featured)).sort((a, b) => a.data.order - b.data.order).slice(0, 4);
 ---
 
-<Section id="works" number="03" label="WORKS" title="参考サンプル" ctaLabel="VIEW ALL SAMPLES" ctaHref="/works" nextHref="#news" nextLabel="04 NEWS">
+<Section id="works" number="03" label="WORKS" title="Recent Works" ctaLabel="VIEW ALL WORKS" ctaHref="/works" nextHref="#news" nextLabel="04 NEWS">
   <p class="section__lead" slot="intro">{works.lead}</p>
   <div class="works-deck" data-works-deck>
     <div class="works-deck__cards" role="region" aria-label="制作事例カルーセル">

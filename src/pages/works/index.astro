@@ -10,8 +10,8 @@ const items = (await getCollection('works', ({ data }) => !data.draft)).sort(
 );
 ---
 
-<PageShell title={`参考サンプル（実案件ではありません） | ${site.name}`} description={works.lead}>
-  <PageHead eyebrow="SAMPLES" title="参考サンプル" lead={works.lead} />
+<PageShell title={`Recent Works | ${site.name}`} description={works.lead}>
+  <PageHead eyebrow="WORKS" title="Recent Works" lead={works.lead} />
 
   <div class="archive" data-reveal>
     <p class="archive__count">{items.length} SAMPLES</p>

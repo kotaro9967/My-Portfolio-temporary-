@@ -33,6 +33,7 @@ import { site, nav } from '../data/site';
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
       menu.dataset.open = String(open);
+      document.documentElement.classList.toggle('nav-open', open);
     };
 
     toggle.addEventListener('click', () => {
@@ -55,6 +56,7 @@ import { site, nav } from '../data/site';
       if (!menu.contains(event.target) && !toggle.contains(event.target)) setOpen(false);
     });
 
-    window.matchMedia('(max-width: 1000px)').addEventListener('change', () => setOpen(false));
+    const breakpoint = window.matchMedia('(max-width: 1000px)');
+    breakpoint.addEventListener('change', () => setOpen(false));
   }
 </script>

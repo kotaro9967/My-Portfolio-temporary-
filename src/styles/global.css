@@ -97,6 +97,17 @@ textarea,
 button {
   font-family: inherit;
 }
+
+button,
+.ghost-btn,
+.nav__cta,
+.works__next,
+.works__dot,
+.contact__submit,
+.works-deck__controls button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 input::placeholder,
 textarea::placeholder {
   color: var(--ink-faint);
@@ -359,11 +370,16 @@ textarea::placeholder {
   letter-spacing: 0.14em;
   color: var(--accent);
   white-space: nowrap;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s ease,
+    background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 .ghost-btn:hover {
   background: var(--surface-hover);
   color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -18px rgba(79, 90, 199, 0.7);
 }
+.ghost-btn:active { transform: translateY(1px) scale(0.98); box-shadow: none; }
 
 .ghost-btn--filled {
   background: linear-gradient(100deg, #dde1f8, #e7e2f7);
@@ -1232,6 +1248,10 @@ textarea::placeholder {
 }
 
 @media (max-width: 1000px) {
+  html.nav-open,
+  html.nav-open body {
+    overflow: hidden;
+  }
   .nav {
     position: absolute;
     top: var(--header-h);
@@ -1242,17 +1262,29 @@ textarea::placeholder {
     gap: 0;
     background: #fbfbfe;
     backdrop-filter: none;
-    max-height: calc(100vh - var(--header-h));
-    max-height: calc(100dvh - var(--header-h));
+    height: calc(100vh - var(--header-h));
+    height: calc(100dvh - var(--header-h));
     overflow-y: auto;
     overscroll-behavior: contain;
     box-shadow: 0 18px 34px -26px rgba(63, 69, 100, 0.4);
     border-bottom: 1px solid var(--line);
     padding: 8px 20px 20px;
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-12px);
+    transform-origin: top center;
+    transition: opacity 0.22s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s linear 0.32s;
+    will-change: opacity, transform;
   }
   .nav[data-open='true'] {
     display: flex;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
   }
   .nav__link,
   .nav__cta {
@@ -1260,7 +1292,21 @@ textarea::placeholder {
     min-height: 48px;
     flex-shrink: 0;
     padding: 16px 4px;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.18s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.2s ease, background-color 0.2s ease;
   }
+  .nav[data-open='true'] .nav__link,
+  .nav[data-open='true'] .nav__cta {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .nav[data-open='true'] > :nth-child(2) { transition-delay: 0.025s; }
+  .nav[data-open='true'] > :nth-child(3) { transition-delay: 0.05s; }
+  .nav[data-open='true'] > :nth-child(4) { transition-delay: 0.075s; }
+  .nav[data-open='true'] > :nth-child(5) { transition-delay: 0.1s; }
+  .nav[data-open='true'] > :nth-child(6) { transition-delay: 0.125s; }
   .nav__cta {
     margin-top: 8px;
     justify-content: space-between;
@@ -1269,6 +1315,36 @@ textarea::placeholder {
   .nav-toggle {
     display: block;
     flex-shrink: 0;
+  }
+}
+
+.nav-toggle,
+.nav__cta,
+.works__next,
+.contact__submit,
+.works-deck__controls button {
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s ease,
+    background-color 0.2s ease, border-color 0.2s ease;
+}
+.nav-toggle:active,
+.nav__cta:active,
+.works__next:active,
+.contact__submit:active,
+.works-deck__controls button:active {
+  transform: translateY(1px) scale(0.96);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav,
+  .nav__link,
+  .nav__cta,
+  .nav-toggle,
+  .nav-toggle__icon,
+  .nav-toggle__icon::before,
+  .nav-toggle__icon::after,
+  .ghost-btn {
+    transition: none !important;
   }
 }
 
