@@ -245,9 +245,9 @@ textarea::placeholder {
   cursor: pointer;
   position: relative;
 }
-.nav-toggle span,
-.nav-toggle span::before,
-.nav-toggle span::after {
+.nav-toggle__icon,
+.nav-toggle__icon::before,
+.nav-toggle__icon::after {
   position: absolute;
   left: 50%;
   width: 16px;
@@ -257,27 +257,27 @@ textarea::placeholder {
   content: '';
   transition: transform 0.22s ease, opacity 0.22s ease;
 }
-.nav-toggle span {
+.nav-toggle__icon {
   top: 50%;
   transform: translate(-50%, -50%);
 }
-.nav-toggle span::before {
+.nav-toggle__icon::before {
   top: -5px;
   left: 0;
   transform: none;
 }
-.nav-toggle span::after {
+.nav-toggle__icon::after {
   top: 5px;
   left: 0;
   transform: none;
 }
-.nav-toggle[aria-expanded='true'] span {
+.nav-toggle[aria-expanded='true'] .nav-toggle__icon {
   background: transparent;
 }
-.nav-toggle[aria-expanded='true'] span::before {
+.nav-toggle[aria-expanded='true'] .nav-toggle__icon::before {
   transform: translateY(5px) rotate(45deg);
 }
-.nav-toggle[aria-expanded='true'] span::after {
+.nav-toggle[aria-expanded='true'] .nav-toggle__icon::after {
   transform: translateY(-5px) rotate(-45deg);
 }
 
@@ -1231,10 +1231,7 @@ textarea::placeholder {
   }
 }
 
-@media (max-width: 760px) {
-  :root {
-    --gutter: 20px;
-  }
+@media (max-width: 1000px) {
   .nav {
     position: absolute;
     top: var(--header-h);
@@ -1243,8 +1240,13 @@ textarea::placeholder {
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-    background: rgba(251, 251, 254, 0.98);
-    backdrop-filter: blur(10px);
+    background: #fbfbfe;
+    backdrop-filter: none;
+    max-height: calc(100vh - var(--header-h));
+    max-height: calc(100dvh - var(--header-h));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-shadow: 0 18px 34px -26px rgba(63, 69, 100, 0.4);
     border-bottom: 1px solid var(--line);
     padding: 8px 20px 20px;
     display: none;
@@ -1254,6 +1256,9 @@ textarea::placeholder {
   }
   .nav__link,
   .nav__cta {
+    height: auto;
+    min-height: 48px;
+    flex-shrink: 0;
     padding: 16px 4px;
   }
   .nav__cta {
@@ -1263,6 +1268,17 @@ textarea::placeholder {
   }
   .nav-toggle {
     display: block;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .brand__tag { display: none; }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --gutter: 20px;
   }
   .section__title {
     font-size: clamp(32px, 9vw, 42px);
@@ -1317,7 +1333,8 @@ textarea::placeholder {
 .page { background: rgba(251, 251, 254, 0.94); }
 .dot-field { position: fixed; inset: 0; z-index: 0; pointer-events: none; filter: blur(14px) saturate(1.25); }
 .blueprint-grid { position: fixed; }
-.site-header, .shell { z-index: 2; }
+.shell { z-index: 2; }
+.site-header { z-index: 40; }
 
 .mask-host { position: relative; overflow: hidden; margin: 0 0 24px; }
 .mask-host .section__title { margin: 0; opacity: 0; font-size: clamp(42px, 4.2vw, 62px); }
