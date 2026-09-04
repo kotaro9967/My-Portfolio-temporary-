@@ -9,8 +9,8 @@ import { site, nav } from '../data/site';
       <span class="brand__tag">{site.tagline}</span>
     </a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
-      <span></span>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く">
+      <span class="nav-toggle__icon" aria-hidden="true"></span>
       <span class="visually-hidden">メニューを開閉</span>
     </button>
 
@@ -31,6 +31,7 @@ import { site, nav } from '../data/site';
   if (toggle && menu) {
     const setOpen = (open: boolean) => {
       toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
       menu.dataset.open = String(open);
     };
 
@@ -43,7 +44,17 @@ import { site, nav } from '../data/site';
     });
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+        toggle.focus();
+      }
     });
+
+    document.addEventListener('click', (event) => {
+      if (!(event.target instanceof Node)) return;
+      if (!menu.contains(event.target) && !toggle.contains(event.target)) setOpen(false);
+    });
+
+    window.matchMedia('(max-width: 1000px)').addEventListener('change', () => setOpen(false));
   }
 </script>
