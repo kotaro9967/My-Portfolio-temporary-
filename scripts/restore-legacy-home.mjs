@@ -2,12 +2,27 @@ import { copyFile, cp, mkdir, readFile, writeFile, readdir } from 'node:fs/promi
 import { seo, canonicalUrl, jsonLd, identitySchema } from '../config/seo.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { Script } from 'node:vm';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputDir = resolve(projectRoot, 'dist');
 
 await mkdir(outputDir, { recursive: true });
 let homeHtml = await readFile(resolve(projectRoot, 'index.html'), 'utf8');
+// The legacy homepage is copied rather than compiled by Astro. Validate it too.
+if (/Warning: truncated output|\b\d+ tokens truncated\b/.test(homeHtml) ||
+    !/^\s*<!doctype html>/i.test(homeHtml) || !/<\/html>\s*$/i.test(homeHtml)) {
+  throw new Error('Homepage source is incomplete; refusing to publish it.');
+}
+for (const [index, match] of [...homeHtml.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].entries()) {
+  const [, attributes, source] = match;
+  if (!source.trim() || /\bsrc\s*=/i.test(attributes)) continue;
+  const type = attributes.match(/\btype\s*=\s*["']([^"']+)["']/i)?.[1] ?? '';
+  if (type === 'application/ld+json') JSON.parse(source);
+  else if (['', 'text/javascript', 'application/javascript', 'text/x-dc'].includes(type)) {
+    new Script(source, { filename: `homepage-inline-${index}.js` });
+  }
+}
 // Pages preview commits its generated homepage into the repository root.
 // Strip its repository prefix when that homepage is reused by Netlify.
 // Only local quoted URLs are changed; external URLs and page design stay intact.
