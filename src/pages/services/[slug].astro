@@ -1,0 +1,68 @@
+---
+import type { GetStaticPaths } from 'astro';
+import PageShell from '../../components/PageShell.astro';
+import { seo, canonicalUrl, jsonLd } from '../../../config/seo.mjs';
+
+export const getStaticPaths = (() => {
+ const services = [
+  {
+    slug: 'corporate-site', eyebrow: 'CORPORATE WEBSITE',
+    title: '中小企業向けホームページ制作',
+    description: '東京周辺の中小企業向けホームページ制作。会社の魅力と相談先が伝わる構成を考え、スマートフォン対応・採用ページ・CMSまでまとめて制作します。',
+    intro: '事業内容を並べるだけでなく、「誰に何を相談できる会社か」が短時間で伝わるホームページを設計します。',
+    suitable: ['古いサイトを整理して作り直したい', '問い合わせ先や事業の強みが伝わりにくい', '採用情報も同じサイトにまとめたい'],
+    deliverables: ['目的と閲覧者に合わせたページ構成', 'スマートフォンでも読みやすいデザインと実装', '問い合わせ・採用・会社紹介への導線', '検索エンジン向けの基本設定'],
+    faq: [['文章や写真が揃っていなくても相談できますか？','相談できます。最初に必要な素材を整理し、準備する人と時期を一緒に決めます。'],['検索順位は保証されますか？','順位は競合や内容にも左右されるため保証していません。検索エンジンが理解しやすく、改善を続けやすい基盤を整えます。']],
+  },
+  {
+    slug: 'recruit', eyebrow: 'RECRUITMENT PAGE', title: '中小企業の採用ページ制作',
+    description: '若者・就活生の視点で、仕事内容や働く人、会社の魅力を伝える中小企業向け採用ページを制作します。東京周辺は訪問取材も相談できます。',
+    intro: '求人条件だけでは伝わらない仕事の面白さや職場の雰囲気を、応募を検討する人の疑問に沿って整理します。',
+    suitable: ['求人媒体だけでは会社の魅力を伝えきれない', '若手応募者が知りたい情報を整理したい', '求人情報を自社で更新したい'],
+    deliverables: ['応募者を想定した情報設計', '仕事内容・働く人・環境の見せ方', '求人情報と応募導線', '必要に応じた現場訪問・オンライン取材'],
+    faq: [['社員インタビューも掲載できますか？','可能です。掲載する質問、原稿、写真の準備方法を事前に整理します。'],['採用人数の増加は保証されますか？','応募数や採用数は保証していません。応募者が判断するために必要な情報を伝わりやすく整えます。']],
+  },
+  {
+    slug: 'cms', eyebrow: 'CONTENT MANAGEMENT', title: '自社で更新できるCMS導入',
+    description: '従業員数、会社情報、お知らせ、求人情報などを自社で更新できるmicroCMS導入。更新項目と公開方法を企業ごとに設計します。',
+    intro: '小さな文章変更のたびに制作会社へ依頼しなくてもよいように、変更頻度の高い情報を管理画面から更新できる形にします。',
+    suitable: ['従業員数や会社情報を自社で変更したい', '求人やお知らせを継続して更新したい', '更新担当者が迷わない入力画面にしたい'],
+    deliverables: ['更新する情報と権限の整理', 'microCMSの入力項目設計', '公開・下書き運用の設計', '更新方法の共有'],
+    faq: [['すべてのデザインを管理画面で変えられますか？','文章・画像・数値など事前に決めた項目を更新できます。レイアウト変更や機能追加は別途対応です。'],['CMSの料金はかかりますか？','利用人数や機能、アクセス量により異なります。必要な範囲と各サービスの利用条件を見積もり時に確認します。']],
+  },
+  {
+    slug: 'analytics', eyebrow: 'ANALYTICS', title: 'アクセス解析ツールの導入',
+    description: 'Google Analyticsなどのアクセス解析ツールを導入し、ホームページ公開後の改善に使える計測環境を整えます。',
+    intro: 'ページを公開して終わりにせず、どのページが見られ、問い合わせにつながっているかを確認できる土台を整えます。',
+    suitable: ['サイトへの訪問状況を把握したい', '記事やサービスページの改善材料がほしい', '問い合わせまでの動きを確認したい'],
+    deliverables: ['目的に合わせた基本計測', 'Search Consoleとの役割整理', '確認する指標の共有', 'プライバシーに配慮した導入相談'],
+    faq: [['導入すれば問い合わせは増えますか？','導入だけで成果が増えるものではありません。改善点を判断するためのデータを集められるようにします。'],['毎月の分析も依頼できますか？','必要な確認内容と頻度を伺い、制作とは別に対応範囲を相談します。']],
+  },
+  {
+    slug: 'ai-blog', eyebrow: 'AI CONTENT SYSTEM', title: 'AIブログ記事生成システムの構築',
+    description: 'キーワード選定、AI記事生成、microCMSへの下書き保存、確認通知までを自動化する独自システムを要件に合わせて構築します。',
+    intro: 'AIに公開を任せきるのではなく、下書き生成と人による確認を組み合わせ、継続できる記事制作フローを設計します。',
+    suitable: ['記事作成の下準備を効率化したい', 'CMSへの下書き保存まで自動化したい', '公開前の確認手順を残したい'],
+    deliverables: ['キーワード候補の管理', 'ブランド情報を反映した記事生成', 'CMSへの下書き保存', 'レビュー通知と公開フロー'],
+    faq: [['自動で公開できますか？','技術的には可能ですが、事実・表現・独自性を確認してから公開する運用を推奨します。'],['基本料金に含まれますか？','独自システムのため、ホームページの基本制作とは分けて要件に応じて見積もります。']],
+  },
+] as const;
+ return services.map((service) => ({ params: { slug: service.slug }, props: { service } }));
+}) satisfies GetStaticPaths;
+const { service } = Astro.props;
+const schema = { '@context':'https://schema.org', '@type':'Service', name:service.title, url:canonicalUrl(`/services/${service.slug}/`), description:service.description, provider:{ '@id':`${seo.productionOrigin}/#person` }, areaServed:'東京周辺（オンライン完結の場合は遠方も相談可能）' };
+---
+<PageShell title={`${service.title} | ${seo.name}`} description={service.description}>
+  <script type="application/ld+json" set:html={jsonLd(schema)} />
+  <article class="service-detail">
+    <header><p class="eyebrow">{service.eyebrow}</p><h1>{service.title}</h1><p class="lead">{service.intro}</p><a class="ghost-btn ghost-btn--filled" href="/#contact">無料で相談する</a></header>
+    <section><h2>このような企業に向いています</h2><ul class="cards">{service.suitable.map((item) => <li>{item}</li>)}</ul></section>
+    <section><h2>対応する内容</h2><ol class="steps">{service.deliverables.map((item, index) => <li><span>{String(index + 1).padStart(2,'0')}</span><strong>{item}</strong></li>)}</ol></section>
+    <section><h2>料金と進め方</h2><p>基本的なホームページ制作は10万〜15万円、納期は約1か月が目安です。ページ数、機能、素材の準備、混雑状況により変わります。独自システムは別途見積もりです。ご相談・お見積もりは無料です。</p><a href="/services/">サービス全体・制作の流れを見る</a></section>
+    <section><h2>よくある質問</h2>{service.faq.map(([question, answer]) => <div class="faq"><h3>{question}</h3><p>{answer}</p></div>)}</section>
+    <aside class="cta"><h2>目的が固まっていない段階でも相談できます</h2><p>必要なページ、更新したい情報、予算を一緒に整理します。</p><a class="ghost-btn ghost-btn--filled" href="/#contact">無料相談・見積もりへ</a></aside>
+  </article>
+</PageShell>
+<style>
+  .service-detail{max-width:960px;margin:auto;padding:48px 0 88px;font-size:16px;line-height:2}.eyebrow{font:500 13px/1.5 var(--font-mono);letter-spacing:.12em;color:var(--accent)}h1{font-size:clamp(30px,5vw,48px);line-height:1.45;color:var(--accent)}h2{font-size:clamp(23px,3vw,31px);line-height:1.6;color:var(--ink-strong)}h3{font-size:18px;color:var(--ink-strong)}.lead{max-width:720px;font-size:18px}section,.cta{margin-top:64px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0;list-style:none}.cards li,.faq,.cta{padding:24px;border:1px solid var(--line);border-radius:16px;background:#fff}.steps{padding:0;list-style:none;border-top:1px solid var(--line)}.steps li{display:flex;gap:18px;padding:20px 4px;border-bottom:1px solid var(--line)}.steps span{font-family:var(--font-mono);color:var(--accent)}.cta{background:linear-gradient(145deg,#fff,#f3f4fd)}@media(max-width:700px){.cards{grid-template-columns:1fr}.lead{font-size:16px}}
+</style>

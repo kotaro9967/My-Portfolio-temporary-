@@ -2074,6 +2074,24 @@ textarea::placeholder {
   font-size: 13px;
   line-height: 1.7;
 }
+.prose figure {
+  margin: 38px 0;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--line-card);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fff, #f6f7ff);
+  box-shadow: 0 20px 40px -34px rgba(79, 90, 199, 0.55);
+}
+.prose figure > :first-child { margin-top: 0; }
+.prose figure > :not(figcaption):last-of-type { margin-bottom: 0; }
+.prose figcaption {
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px dashed var(--line-card);
+  color: var(--ink-mute);
+  font-size: 13px;
+  line-height: 1.8;
+}
 .prose th,
 .prose td { padding: 13px 15px; border: 1px solid var(--line-card); text-align: left; vertical-align: top; }
 .prose th { color: var(--ink-strong); background: #f2f4fe; font-weight: 600; }

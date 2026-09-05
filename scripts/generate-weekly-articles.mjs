@@ -64,6 +64,16 @@ console.log(`週次記事生成: ${successCount}/${results.length}件成功`);
 if (successCount !== 3) process.exitCode = 1;
 
 async function chooseKeywords(referenceKeywords, usedTopics, currentConfig) {
+  // 最初のトピッククラスターは、設定ファイルの順番どおりに消化する。
+  // これによりAIの気まぐれで主軸から外れず、同じ検索意図の再生成も避けられる。
+  const normalize = (value) => String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const used = new Set(usedTopics.map(normalize));
+  const planned = referenceKeywords.filter((value) => !used.has(normalize(value)));
+  if (planned.length >= 3) {
+    console.log(`初期記事計画から選定: ${planned.slice(0, 3).join(' / ')}`);
+    return planned.slice(0, 3);
+  }
+
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
@@ -77,7 +87,8 @@ async function chooseKeywords(referenceKeywords, usedTopics, currentConfig) {
         '毎週生成する記事の検索キーワードを、重複なく3件選んでください。',
         'ユーザー提供の参考キーワードを企画の最優先情報として扱ってください。',
         '参考キーワードはそのまま選んでも、検索意図を保った具体的なロングテールへ展開しても構いません。',
-        '3件は「採用・若者への訴求」「CMS・運用」「Web制作の課題解決」から原則1件ずつ選んでください。',
+        '当面は「ホームページ＋採用ページ＋CMS」を主軸とし、参考キーワードの上から未使用テーマを優先してください。',
+        '3件は「採用・若者への訴求」「CMS・自社更新」「ホームページとの統合」から原則1件ずつ選んでください。',
         '費用・相場キーワードに偏らないでください。地域名を機械的に組み合わせないでください。',
         '検索者の具体的な悩みが分かり、サービス相談へ自然につながる日本語キーワードにしてください。',
         '既存記事や過去候補と同じ検索意図のキーワードは避けてください。',

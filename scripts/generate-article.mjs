@@ -26,6 +26,8 @@ const ALLOWED_HTML_TAGS = new Set([
   'tr',
   'th',
   'td',
+  'figure',
+  'figcaption',
 ]);
 
 const DANGEROUS_HTML_TAGS = new Set(['script', 'style', 'iframe', 'object', 'embed', 'form']);
@@ -83,7 +85,10 @@ async function generateArticle(inputKeyword, currentConfig) {
         '検索読者の疑問を具体的に解決し、誠実で読みやすいSEO記事を作成してください。',
         '事実確認できない統計、実績、料金、顧客事例は創作しないでください。',
         '本文はHTMLで、h1・html・body・script・styleタグを使わず、h2から始めてください。',
-        '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a, br, hr, code, pre, table, thead, tbody, tr, th, td です。',
+        '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a, br, hr, code, pre, table, thead, tbody, tr, th, td, figure, figcaption です。',
+        '本文には必ずfigureを1つ以上入れ、その中に比較表、工程図として読めるol、またはチェックリストとして読めるulを置いてください。figcaptionで図の内容も説明してください。',
+        '根拠のない割合・件数・効果をグラフにしないでください。数値データがない場合は、工程図・比較表・チェックリストを使ってください。',
+        '画像URLは創作せず、imgタグは使わないでください。実物の写真や画面画像は公開前の人間による編集で追加します。',
         '本文末尾に「まとめ」のh2を置き、読者に自然な相談導線を示してください。',
         '以下のブランド情報は、記事テーマに関係する範囲だけ自然に使用してください。宣伝を過剰に繰り返さないでください。',
         JSON.stringify(brandProfile, null, 2),
@@ -158,6 +163,7 @@ function validateArticle(article) {
   const errors = [];
   const plainText = article.body.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
   const h2Count = (article.body.match(/<h2(?:\s[^>]*)?>/gi) || []).length;
+  const figureCount = (article.body.match(/<figure(?:\s[^>]*)?>/gi) || []).length;
   const usedTags = [...article.body.matchAll(/<\/?([a-z][a-z0-9-]*)\b[^>]*>/gi)].map((match) =>
     match[1].toLowerCase()
   );
@@ -169,6 +175,9 @@ function validateArticle(article) {
   }
   if (plainText.length < 1200) errors.push('本文は1200文字以上');
   if (h2Count < 3) errors.push('h2見出しは3個以上');
+  if (figureCount < 1 || !/<figure\b[^>]*>[\s\S]*<(?:table|ol|ul)\b/i.test(article.body)) {
+    errors.push('比較表・工程図・チェックリストのfigureを1つ以上含める');
+  }
   if (/<(?:script|style|iframe|object|embed|form)\b/i.test(article.body)) {
     errors.push('禁止HTMLタグを含めない');
   }
