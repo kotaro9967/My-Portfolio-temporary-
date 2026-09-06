@@ -31,7 +31,16 @@ export function microCMSLoader(endpoint: string): Loader {
         endpoint,
       });
 
+      let loadedCount = 0;
       for (const item of contents) {
+        // Broad draft-read keys can return never-published entries without this field.
+        // Never invent a publication date: that would expose a draft on the public site.
+        if (endpoint === 'articles' &&
+            (typeof item.publishedAt !== 'string' || !item.publishedAt.trim() ||
+             !Number.isFinite(Date.parse(item.publishedAt)))) {
+          logger.warn(`記事 ${item.id} は有効な公開日がないため読み込みをスキップしました。CMSキーの下書き・公開終了の全取得権限を無効にしてください。`);
+          continue;
+        }
         const { id, body, ...rest } = item as { id: string; body?: string } & Record<string, unknown>;
         const data = await parseData({ id, data: rest });
         const digest = generateDigest({ ...data, body });
@@ -41,9 +50,10 @@ export function microCMSLoader(endpoint: string): Loader {
           digest,
           rendered: body ? { html: body } : undefined,
         });
+        loadedCount++;
       }
 
-      logger.info(`microCMS "${endpoint}" から ${contents.length} 件読み込みました。`);
+      logger.info(`microCMS "${endpoint}" から ${loadedCount} 件読み込みました。`);
     },
   };
 }
