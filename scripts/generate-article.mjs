@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { attachArticleVisuals, insertVisualSection } from './article-visuals.mjs';
 import { researchArticle, addResearchCitations } from './article-research.mjs';
+import { attachLiveScreenshots } from './article-screenshots.mjs';
 
 const brandProfile = JSON.parse(
   readFileSync(new URL('../config/article-brand-profile.json', import.meta.url), 'utf8')
@@ -71,6 +72,10 @@ try { article.body = addResearchCitations(article.body, research); }
 catch (error) { fail(error.message); }
 validateArticle(article);
 if (visualSection) article.body = insertVisualSection(article.body, visualSection);
+if (process.env.ARTICLE_VISUALS === 'true') {
+  try { article = await attachLiveScreenshots(article, config); }
+  catch (error) { fail(`実画面撮影に失敗しました: ${error.message}`); }
+}
 
 const created = await saveDraft(article, config);
 console.log(`記事タイトル: ${article.title}`);
