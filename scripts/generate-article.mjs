@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { attachArticleVisuals, insertVisualSection } from './article-visuals.mjs';
+import { attachExplanatoryFigures } from './article-explanatory-figures.mjs';
 import { researchArticle, addResearchCitations } from './article-research.mjs';
-import { attachLiveScreenshots } from './article-screenshots.mjs';
 import { attachMetrics } from './article-metrics.mjs';
 
 const brandProfile = JSON.parse(
@@ -58,27 +57,17 @@ try {
   console.log(`リサーチ: 出典 ${research.sources.length}件 / 検索 ${research.searchCalls}回`);
   console.log(`リサーチ使用量: input ${research.usage?.input_tokens ?? 0} / output ${research.usage?.output_tokens ?? 0} tokens`);
 } catch (error) { fail(error.message); }
-let visualSection = '';
-// Fixed sample screenshots are optional illustrations, never evidence.
-if (process.env.ARTICLE_VISUALS === 'true' && process.env.ARTICLE_SAMPLE_VISUALS === 'true') {
-  try {
-    // Check upload access before spending tokens on a new article.
-    visualSection = (await attachArticleVisuals({ keyword, body: '' }, config)).body;
-  } catch (error) {
-    fail(`画像処理に失敗したため下書き保存を中止しました: ${error.message}`);
-  }
-}
 let article = await generateArticle(keyword, config, research);
 try { article.body = addResearchCitations(article.body, research); }
 catch (error) { fail(error.message); }
 validateArticle(article);
-if (visualSection) article.body = insertVisualSection(article.body, visualSection);
 if (process.env.ARTICLE_VISUALS === 'true') {
-  try { article = await attachLiveScreenshots(article, config); }
-  catch (error) { fail(`実画面撮影に失敗しました: ${error.message}`); }
+  try { article = await attachExplanatoryFigures(article, config); }
+  catch (error) { fail(`説明図の作成に失敗しました: ${error.message}`); }
 }
 
-article = await attachMetrics(article, config);
+// Measurements are opt-in: do not append unrelated dashboard screenshots.
+if (process.env.ARTICLE_METRICS_VISUALS === 'true') article = await attachMetrics(article, config);
 const created = await saveDraft(article, config);
 console.log(`記事タイトル: ${article.title}`);
 console.log(`対象キーワード: ${article.keyword}`);
@@ -116,9 +105,9 @@ async function generateArticle(inputKeyword, currentConfig, research) {
         '比較表や工程図はこの記事の疑問を解決する内容にしてください。資料に基づく図表はfigcaptionに出典IDと条件を記載し、独自の提案は「制作上の提案」と明示してください。統計値には対象・時点・単位・出典がすべて必要です。確認できない数値は使わず定性的な表にしてください。',
         '本文はHTMLで、h1・html・body・script・styleタグを使わず、h2から始めてください。',
         '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a, br, hr, code, pre, table, thead, tbody, tr, th, td, figure, figcaption です。',
-        '本文には必ずfigureを1つ以上入れ、その中に比較表、工程図として読めるol、またはチェックリストとして読めるulを置いてください。figcaptionで図の内容も説明してください。',
+        '本文の理解や判断に役立つfigureを1〜2個、説明対象の段落の直後に入れてください。装飾や本文の単なる繰り返しは禁止です。比較表table（列は最大3、データ行は最大5）、手順ol（最大5段階）、判断基準ul（最大5項目）から適切な形式を選び、各セル・項目は80文字以内にしてください。figcaptionには「この図から何が分かるか」と出典IDを記載し、独自の提案なら「制作上の提案」と明記してください。図解が必要な具体的な疑問を本文で説明してください。',
         '根拠のない割合・件数・効果をグラフにしないでください。数値データがない場合は、工程図・比較表・チェックリストを使ってください。',
-        '画像URLは創作せず、imgタグは使わないでください。画面画像と説明文は別の撮影処理で追加します。画像の内容や測定結果を推測して書かないでください。',
+        '画像URLは創作せず、imgタグは使わないでください。figureの比較表や工程図を別処理で画像化します。Web画像の転載は行いません。根拠のある調査データは比較表にまとめ、対象・調査年・単位・条件・出典を省略しないでください。異なる条件の数字を単純比較せず、確認できなければ数字を使わないでください。',
         '本文末尾に「まとめ」のh2を置き、読者に自然な相談導線を示してください。',
         '以下のブランド情報は、記事テーマに関係する範囲だけ自然に使用してください。宣伝を過剰に繰り返さないでください。',
         JSON.stringify(brandProfile, null, 2),
