@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { metricTopics, period28, parseSpeed, parseUmami, fetchSpeed, fetchUmami, speedFigure, umamiFigure, chartHtml, attachMetrics } from './article-metrics.mjs';
+import { metricTopics, period28, parseSpeed, parseUmami, fetchSpeed, fetchUmami, speedFigure, umamiFigure, chartHtml, attachMetrics, validateUmamiShareUrl, captureUmamiShare } from './article-metrics.mjs';
 const now = Date.parse('2026-09-06T02:00:00Z');
 const period = period28(now);
 const speed = () => ({ lighthouseResult: { fetchTime: '2026-09-06T01:00:00Z', finalUrl: 'https://kotaro.tokyo/', lighthouseVersion: '12.0.0', categories: { performance: { score: 0.83 } }, audits: { 'largest-contentful-paint': { numericValue: 2410 }, 'cumulative-layout-shift': { numericValue: 0.032 }, 'total-blocking-time': { numericValue: 140 } } } });
@@ -8,6 +8,10 @@ test('only relevant topics request metrics', () => {
   assert.deepEqual(metricTopics({ keyword: '葛飾区 町工場 ホームページ制作' }), { speed: false, analytics: false });
   assert.ok(metricTopics({ keyword: '表示速度 改善' }).speed);
   assert.ok(metricTopics({ title: 'Umamiでアクセス解析' }).analytics);
+});
+test('share URL validation accepts only an exact capability URL', () => {
+  assert.equal(validateUmamiShareUrl('https://cloud.umami.is/share/XbCODizCzVo7iofO'), 'https://cloud.umami.is/share/XbCODizCzVo7iofO');
+  for (const value of ['https://evil.test/share/XbCODizCzVo7iofO', 'http://cloud.umami.is/share/XbCODizCzVo7iofO', 'https://user@cloud.umami.is/share/XbCODizCzVo7iofO', 'https://cloud.umami.is/share/x?token=y', 'https://cloud.umami.is/api']) assert.throws(() => validateUmamiShareUrl(value));
 });
 test('period covers 28 complete JST days without today', () => {
   assert.equal(period.label, '2026-08-09〜2026-09-05（日本時間）');
@@ -53,6 +57,34 @@ test('figures contain units, measured times, sources and escaped labels', () => 
   assert.match(chartHtml({ ...f, title: '<script>' }), /&lt;script&gt;/);
   const u = umamiFigure(parseUmami({ pageviews: 0, visitors: 0 }, { pageviews: [] }, period));
   assert.match(u.detail, /日別データはありません/);
+});
+test('approved shared dashboard is masked, reviewed, uploaded and browser is closed', async () => {
+  let contexts = 0, closed = 0, browserClosed = false, uploaded = 0, reviewed = false;
+  const locator = selector => ({
+    evaluateAll: async () => {},
+    innerText: async () => selector === 'body' ? 'Overview\nMy Portfolio\nPage views\n12' : '',
+  });
+  const page = { setDefaultTimeout: () => {}, url: () => 'https://cloud.umami.is/share/XbCODizCzVo7iofO',
+    goto: async () => ({ ok: () => true }), waitForTimeout: async () => {}, locator,
+    evaluate: async () => {}, screenshot: async () => Buffer.from('dashboard png') };
+  const browserType = { launch: async () => ({
+    close: async () => { browserClosed = true; },
+    newContext: async () => { contexts++; return { route: async () => {}, newPage: async () => page, close: async () => { closed++; } }; },
+  }) };
+  const request = async (input, options) => {
+    const url = new URL(input);
+    if (url.hostname === 'api.openai.com') {
+      reviewed = true;
+      const body = JSON.parse(options.body);
+      assert.match(body.input[0].content[1].image_url, /^data:image\/png;base64,/);
+      return { ok: true, json: async () => ({ status: 'completed', output: [{ content: [{ type: 'output_text', text: JSON.stringify({ approved: true, caption: '閲覧数を表示した共有ダッシュボード' }) }] }] }) };
+    }
+    uploaded++;
+    return { ok: true, json: async () => ({ url: 'https://images.microcms-assets.io/umami.png' }) };
+  };
+  const figure = await captureUmamiShare({ UMAMI_SHARE_URL: 'https://cloud.umami.is/share/XbCODizCzVo7iofO' }, { openaiApiKey: 'test', openaiModel: 'gpt-5-mini', serviceDomain: 'test', microCMSApiKey: 'test' }, request, browserType);
+  assert.ok(reviewed); assert.equal(uploaded, 1); assert.match(figure, /Umami Cloud共有画面/);
+  assert.equal(closed, contexts); assert.ok(browserClosed);
 });
 test('real browser renders both measurement charts with mocked APIs and uploads', { skip: process.env.VISUAL_BROWSER_TEST !== 'true' }, async () => {
   let uploads = 0;

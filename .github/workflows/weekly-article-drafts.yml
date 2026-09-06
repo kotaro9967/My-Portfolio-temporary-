@@ -40,6 +40,7 @@ jobs:
       - name: Generate three article drafts
         env:
           ARTICLE_VISUALS: ${{ vars.ARTICLE_VISUALS || 'true' }}
+          UMAMI_SHARE_URL: ${{ secrets.UMAMI_SHARE_URL }}
           PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
           MICROCMS_REVIEWED_IMAGE_URL: ${{ vars.MICROCMS_REVIEWED_IMAGE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

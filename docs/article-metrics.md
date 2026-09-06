@@ -6,20 +6,22 @@ Umamiの管理画面ではWebsiteのDomainを `kotaro.tokyo` にして保存し�
 
 ## 現在の運用
 
-Umami CloudのAPIキー作成はProプランが必要です。無料プランのまま利用するため、GitHub ActionsからUmami APIへは接続しません。UMAMI_API_KEYの登録は不要です。アクセス解析の記事ではUmamiの実データ図表を省略し、値を推測しません。この機能だけを目的にProへ変更する必要はありません。
+Umami CloudのAPIキー作成はProプランが必要です。無料プランのまま利用するため、GitHub ActionsからUmami APIへは接続しません。UMAMI_API_KEYの登録は不要です。この機能だけを目的にProへ変更する必要はありません。
+
+無料プランでは、UmamiのWebsite設定で作成したShare URLをGitHub ActionsのRepository secret `UMAMI_SHARE_URL` に登録します。Share URLは閲覧権限を持つURLなので、公開リポジトリのコードやIssueには記載しません。削除・再発行した場合はSecretも更新します。
 
 PageSpeedはAPIキーなしで計測を試します。定期計測で割当不足や429が発生した場合だけ、GitHubリポジトリのSettings → Secrets and variables → Actionsへ `PAGESPEED_API_KEY` を登録します。Google CloudでPageSpeed Insights APIを有効にしたキーを使い、API制限を設定する場合はPageSpeed Insights APIを指定します。GitHub Actionsから呼ぶためブラウザのHTTPリファラー制限は使えません。
 
-将来Proへ変更する場合に備え、Umamiのwebsite IDとAPI処理はコード内に保持します。共有URLを無料プランで作成できる場合は、APIキーを使わず公開範囲を確認した共有画面だけを撮影する方式を別途追加できます。
+アクセス解析の記事では、Share URLをログイン情報のない新しいブラウザで開きます。通信先をUmami Cloudとフォント配信元に限定し、GET以外のリクエストを止めます。入力欄・フォーム・メールアドレス・電話番号をマスクした後、AIが表示状態と識別情報を確認します。承認された画像だけをmicroCMSへアップロードします。Share URLそのものは記事・ログ・AIへの指示に含めません。
 
 ## 記事への挿入条件
 
 キーワード・タイトルで判定します。本文に偶然出てきた単語だけでは計測しません。
 
 - PageSpeed・表示速度・読み込み速度・高速化・Core Web Vitals・Lighthouse: トップページをmobile/desktop各1回計測。Performance、LCP、CLS、TBT、計測日時、Lighthouseバージョンを表にし、0〜100点の棒グラフをPNGで作ります。
-- Umami・アクセス解析・アクセス数・閲覧数・流入・効果測定・ブログ運用・ブログ更新など: 無料プランではAPIキーを利用できないため自動挿入しません。ログと週次通知に省略理由を残します。
+- Umami・アクセス解析・アクセス数・閲覧数・流入・効果測定・ブログ運用・ブログ更新など: Share URLのOverview画面を撮影します。管理画面に見える数値の意味や因果関係をAIに推測させません。共有画面が空・エラー・ログイン画面・識別情報を含む場合は挿入せず、理由をログと週次通知に残します。
 
-図表は実データから固定コードで生成する独自の図表です。公式管理画面のスクリーンショットではありません。AIに数値を生成させず、追加のOpenAI呼び出しはありません。PlaywrightでPNG化しmicroCMSへアップロードします。画像化失敗時はHTMLの表のみ、API取得失敗時はその図表のみ省略します。記事は下書きのままです。
+PageSpeedの図表は実データから固定コードで生成する独自の図表です。Umamiは共有ダッシュボードのスクリーンショットです。Umami画像の確認時だけOpenAIの画像入力と短い応答のトークンを使用します。PlaywrightでPNG化しmicroCMSへアップロードします。画像化・取得・確認に失敗した素材は省略します。記事は下書きのままです。
 
 週次Issueに採用／省略理由を記載します。手動実行ではActionsログの「計測素材」を確認してください。
 

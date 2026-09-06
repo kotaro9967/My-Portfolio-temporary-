@@ -58,6 +58,7 @@ jobs:
       - name: Generate and save draft
         env:
           ARTICLE_VISUALS: 'true'
+          UMAMI_SHARE_URL: ${{ secrets.UMAMI_SHARE_URL }}
           PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
           MICROCMS_REVIEWED_IMAGE_URL: ${{ vars.MICROCMS_REVIEWED_IMAGE_URL }}
           ARTICLE_KEYWORD: ${{ inputs.keyword }}
