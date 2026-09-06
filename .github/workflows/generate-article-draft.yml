@@ -1,6 +1,9 @@
 name: Generate article draft
 
 on:
+  push:
+    paths:
+      - 'config/article-visual-trial.txt'
   workflow_dispatch:
     inputs:
       keyword:
@@ -18,7 +21,7 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -31,6 +34,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install screenshot browser and Japanese fonts
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
 
       - name: Check required secrets
         env:
@@ -48,10 +57,16 @@ jobs:
 
       - name: Generate and save draft
         env:
+          ARTICLE_VISUALS: 'true'
+          MICROCMS_REVIEWED_IMAGE_URL: ${{ vars.MICROCMS_REVIEWED_IMAGE_URL }}
           ARTICLE_KEYWORD: ${{ inputs.keyword }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-5-mini
           MICROCMS_SERVICE_DOMAIN: e0zqcccmnl
           MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
           MICROCMS_ARTICLES_ENDPOINT: articles
-        run: node scripts/generate-article.mjs "$ARTICLE_KEYWORD"
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            ARTICLE_KEYWORD="$(cat config/article-visual-trial.txt)"
+          fi
+          node scripts/generate-article.mjs "$ARTICLE_KEYWORD"

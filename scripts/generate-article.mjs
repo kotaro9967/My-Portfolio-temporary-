@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { attachArticleVisuals } from './article-visuals.mjs';
 
 const brandProfile = JSON.parse(
   readFileSync(new URL('../config/article-brand-profile.json', import.meta.url), 'utf8')
@@ -48,8 +49,15 @@ const config = {
 };
 
 console.log(`記事を生成しています: ${keyword}`);
-const article = await generateArticle(keyword, config);
+let article = await generateArticle(keyword, config);
 validateArticle(article);
+if (process.env.ARTICLE_VISUALS === 'true') {
+  try {
+    article = await attachArticleVisuals(article, config);
+  } catch (error) {
+    fail(`画像処理に失敗したため下書き保存を中止しました: ${error.message}`);
+  }
+}
 
 const created = await saveDraft(article, config);
 console.log(`記事タイトル: ${article.title}`);
@@ -88,7 +96,7 @@ async function generateArticle(inputKeyword, currentConfig) {
         '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a, br, hr, code, pre, table, thead, tbody, tr, th, td, figure, figcaption です。',
         '本文には必ずfigureを1つ以上入れ、その中に比較表、工程図として読めるol、またはチェックリストとして読めるulを置いてください。figcaptionで図の内容も説明してください。',
         '根拠のない割合・件数・効果をグラフにしないでください。数値データがない場合は、工程図・比較表・チェックリストを使ってください。',
-        '画像URLは創作せず、imgタグは使わないでください。実物の写真や画面画像は公開前の人間による編集で追加します。',
+        '画像URLは創作せず、imgタグは使わないでください。画面画像と説明文は別の撮影処理で追加します。画像の内容や測定結果を推測して書かないでください。',
         '本文末尾に「まとめ」のh2を置き、読者に自然な相談導線を示してください。',
         '以下のブランド情報は、記事テーマに関係する範囲だけ自然に使用してください。宣伝を過剰に繰り返さないでください。',
         JSON.stringify(brandProfile, null, 2),
