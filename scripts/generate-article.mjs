@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { attachArticleVisuals } from './article-visuals.mjs';
+import { attachArticleVisuals, insertVisualSection } from './article-visuals.mjs';
 
 const brandProfile = JSON.parse(
   readFileSync(new URL('../config/article-brand-profile.json', import.meta.url), 'utf8')
@@ -49,15 +49,18 @@ const config = {
 };
 
 console.log(`記事を生成しています: ${keyword}`);
-let article = await generateArticle(keyword, config);
-validateArticle(article);
+let visualSection = '';
 if (process.env.ARTICLE_VISUALS === 'true') {
   try {
-    article = await attachArticleVisuals(article, config);
+    // Check upload access before spending tokens on a new article.
+    visualSection = (await attachArticleVisuals({ keyword, body: '' }, config)).body;
   } catch (error) {
     fail(`画像処理に失敗したため下書き保存を中止しました: ${error.message}`);
   }
 }
+let article = await generateArticle(keyword, config);
+validateArticle(article);
+if (visualSection) article.body = insertVisualSection(article.body, visualSection);
 
 const created = await saveDraft(article, config);
 console.log(`記事タイトル: ${article.title}`);

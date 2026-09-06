@@ -39,6 +39,11 @@ export function visualFigure(url, caption, width, height) {
   return `<figure><img src="${escapeHtml(validateMediaUrl(url))}" alt="${escapeHtml(caption)}" width="${width}" height="${height}" loading="lazy" decoding="async"><figcaption>${escapeHtml(caption)}</figcaption></figure>`;
 }
 
+export function insertVisualSection(body, section) {
+  const summary = /<h2\b[^>]*>\s*まとめ\s*<\/h2>/i;
+  return summary.test(body) ? body.replace(summary, (m) => `${section}\n${m}`) : `${body}\n${section}`;
+}
+
 export async function attachArticleVisuals(article, config, { browserType, request = fetch } = {}) {
   const chromium = browserType || (await import('playwright')).chromium;
   const browser = await chromium.launch({ headless: true });
@@ -72,7 +77,6 @@ export async function attachArticleVisuals(article, config, { browserType, reque
     figures += visualFigure(process.env.MICROCMS_REVIEWED_IMAGE_URL, 'microCMSの記事一覧。識別情報・本文などをマスクした確認済みの画面例。', 1363, 936);
   }
   const section = `<h2>画面で見る構成例</h2><p>以下は記事のテーマを説明するための設計例と自作サンプルです。実在企業の制作実績や改善効果を示すものではありません。</p>${figures}`;
-  const summary = /<h2\b[^>]*>\s*まとめ\s*<\/h2>/i;
-  const body = summary.test(article.body) ? article.body.replace(summary, (m) => `${section}\n${m}`) : `${article.body}\n${section}`;
+  const body = insertVisualSection(article.body, section);
   return { ...article, body };
 }
