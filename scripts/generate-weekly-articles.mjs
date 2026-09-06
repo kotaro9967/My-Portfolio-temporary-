@@ -53,6 +53,7 @@ for (const keyword of keywords) {
     success: child.status === 0,
     title: output.match(/記事タイトル: (.+)/)?.[1]?.trim() || 'タイトル取得失敗',
     id: output.match(/microCMSへ下書き保存しました: (.+)/)?.[1]?.trim() || '',
+    research: output.match(/リサーチ: (.+)/)?.[1]?.trim() || '',
     error: child.status === 0 ? '' : output.match(/ERROR: (.+)/)?.[1]?.trim() || '生成処理に失敗しました',
   });
 }
@@ -192,6 +193,7 @@ function buildSummary(results, currentConfig) {
     lines.push(`- キーワード：\`${result.keyword}\``);
     lines.push(`- 状態：${result.success ? '✅ 下書き保存済み' : '❌ 失敗'}`);
     if (result.id) lines.push(`- microCMSコンテンツID：\`${result.id}\``);
+    if (result.research) lines.push(`- 調査：${result.research}`);
     if (result.error) lines.push(`- エラー：${result.error}`);
     lines.push('');
   });
@@ -199,7 +201,7 @@ function buildSummary(results, currentConfig) {
   lines.push('## 確認と公開');
   lines.push('');
   lines.push(`1. [microCMSの記事管理画面](https://${currentConfig.serviceDomain}.microcms.io/apis/${currentConfig.endpoint})を開く`);
-  lines.push('2. 事実・表現・問い合わせ導線を確認する');
+  lines.push('2. 出典を開き、本文・図表の内容、数値の対象と時点、問い合わせ導線を確認する（引用の自動付与は事実の保証ではありません）');
   lines.push('3. 問題なければ「公開」を押す');
   lines.push('4. GitHub Actionsの「Build GitHub Pages preview」を実行する');
   if (currentConfig.runUrl) lines.push(`\n[今回の実行ログ](${currentConfig.runUrl})`);
