@@ -2,6 +2,8 @@
 
 Generate article draftとWeekly article draftsで有効です。Netlifyの追加ビルドは行いません。CMS管理画面の撮影は行いません。
 
+Umamiの管理画面ではWebsiteのDomainを `kotaro.tokyo` にして保存します。Website IDは変更しません。トラッキングコードは従来のトップページに加え、Astroのブログ・サービス・実績・お知らせページにも設置しています。`data-domains="kotaro.tokyo"` によりGitHub PagesやNetlifyのプレビュー環境は本番集計へ含めません。検索クエリも送信しません。
+
 ## 現在の運用
 
 Umami CloudのAPIキー作成はProプランが必要です。無料プランのまま利用するため、GitHub ActionsからUmami APIへは接続しません。UMAMI_API_KEYの登録は不要です。アクセス解析の記事ではUmamiの実データ図表を省略し、値を推測しません。この機能だけを目的にProへ変更する必要はありません。
