@@ -36,7 +36,7 @@ test('API calls use production filter and fixed hosts; errors do not expose cred
     return { ok: true, json: async () => url.pathname.endsWith('/stats') ? { pageviews: 0, visitors: 0 } : { pageviews: [] } };
   }, now);
   assert.equal(seen.length, 2);
-  await assert.rejects(fetchUmami({}, () => { throw Error('must not call'); }), /未設定/);
+  await assert.rejects(fetchUmami({}, () => { throw Error('must not call'); }), /無料プラン/);
   await assert.rejects(fetchSpeed({ PAGESPEED_API_KEY: 'secret' }, async () => { throw Error('url?key=secret'); }), e => !e.message.includes('secret'));
 });
 test('no API calls for irrelevant articles, missing Umami preserves article', async () => {

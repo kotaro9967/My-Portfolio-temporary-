@@ -62,7 +62,7 @@ export function parseUmami(stats, series, period) {
   return { period, pageviews: count('pageviews'), visitors: count('visitors'), days };
 }
 export async function fetchUmami(env = process.env, request = fetch, now = Date.now()) {
-  if (!env.UMAMI_API_KEY?.trim()) throw new Error('UMAMI_API_KEYが未設定です');
+  if (!env.UMAMI_API_KEY?.trim()) throw new Error('Umami Cloud無料プランではAPIキーを利用できないため省略します');
   const period = period28(now);
   const headers = { Authorization: `Bearer ${env.UMAMI_API_KEY.trim()}`, Accept: 'application/json' };
   const read = async endpoint => {

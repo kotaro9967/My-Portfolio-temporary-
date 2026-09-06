@@ -2,21 +2,20 @@
 
 Generate article draftとWeekly article draftsで有効です。Netlifyの追加ビルドは行いません。CMS管理画面の撮影は行いません。
 
-## 接続設定
+## 現在の運用
 
-GitHubリポジトリのSettings → Secrets and variables → Actions → New repository secretで登録します。
+Umami CloudのAPIキー作成はProプランが必要です。無料プランのまま利用するため、GitHub ActionsからUmami APIへは接続しません。UMAMI_API_KEYの登録は不要です。アクセス解析の記事ではUmamiの実データ図表を省略し、値を推測しません。この機能だけを目的にProへ変更する必要はありません。
 
-- UMAMI_API_KEY: Umami Cloudのプロフィール → Settings → API keys → Create keyで作成したAPIキー。チャット・コード・公開URLには貼らないでください。
-- PAGESPEED_API_KEY: Google CloudでPageSpeed Insights APIを有効にしたAPIキー（任意ですが定期計測には推奨）。API制限を設定するならPageSpeed Insights APIを指定します。GitHub Actionsから呼ぶためブラウザのHTTPリファラー制限は使えません。未設定でもAPIを試しますが、割当不足や429の場合は図表を省略して通知します。
+PageSpeedはAPIキーなしで計測を試します。定期計測で割当不足や429が発生した場合だけ、GitHubリポジトリのSettings → Secrets and variables → Actionsへ `PAGESPEED_API_KEY` を登録します。Google CloudでPageSpeed Insights APIを有効にしたキーを使い、API制限を設定する場合はPageSpeed Insights APIを指定します。GitHub Actionsから呼ぶためブラウザのHTTPリファラー制限は使えません。
 
-Umamiのwebsite IDは既存トップページのトラッキング設定から取得済みです。761c9463-2d4a-4f2d-b25e-075c0bac91d2を対象とし、hostname=kotaro.tokyoで集計します。別サイトに移す場合はscripts/article-metrics.mjsの設定も変更します。
+将来Proへ変更する場合に備え、Umamiのwebsite IDとAPI処理はコード内に保持します。共有URLを無料プランで作成できる場合は、APIキーを使わず公開範囲を確認した共有画面だけを撮影する方式を別途追加できます。
 
 ## 記事への挿入条件
 
 キーワード・タイトルで判定します。本文に偶然出てきた単語だけでは計測しません。
 
 - PageSpeed・表示速度・読み込み速度・高速化・Core Web Vitals・Lighthouse: トップページをmobile/desktop各1回計測。Performance、LCP、CLS、TBT、計測日時、Lighthouseバージョンを表にし、0〜100点の棒グラフをPNGで作ります。
-- Umami・アクセス解析・アクセス数・閲覧数・流入・効果測定・ブログ運用・ブログ更新など: 当日を除く直近28日（日本時間）のPV/訪問者数と、APIに返った日別PVの棒グラフ・表を挿入します。欠損日は推測で埋めません。個人ごとのデータやURLクエリは取得しません。
+- Umami・アクセス解析・アクセス数・閲覧数・流入・効果測定・ブログ運用・ブログ更新など: 無料プランではAPIキーを利用できないため自動挿入しません。ログと週次通知に省略理由を残します。
 
 図表は実データから固定コードで生成する独自の図表です。公式管理画面のスクリーンショットではありません。AIに数値を生成させず、追加のOpenAI呼び出しはありません。PlaywrightでPNG化しmicroCMSへアップロードします。画像化失敗時はHTMLの表のみ、API取得失敗時はその図表のみ省略します。記事は下書きのままです。
 
