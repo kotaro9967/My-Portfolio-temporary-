@@ -18,7 +18,14 @@ test('preserve claim/citation alignment and escape titles', () => {
   const research = parseResearch(payload());
   assert.equal(research.notes, 'One [[S1]]. Two [[S2]].');
   const html = addResearchCitations('<p>One [[S1]]. Two [[S2]].</p>', research);
+  const [articleBody] = html.split('<h2>参考資料</h2>');
+  assert.match(articleBody, /href="#source-s1"[^>]*>［1］<\/a>/);
+  assert.match(articleBody, /href="#source-s2"[^>]*>［2］<\/a>/);
+  assert.doesNotMatch(articleBody, /https:\/\//);
+  assert.doesNotMatch(articleBody, /A &amp; B|CMS/);
   assert.match(html, /A &amp; B/);
+  assert.match(html, /id="source-s1"/);
+  assert.match(html, /href="https:\/\/web\.dev\/a"/);
   assert.match(html, /参考資料/);
   assert.doesNotMatch(html, /\[\[/);
 });

@@ -97,11 +97,12 @@ export function addResearchCitations(body, research) {
     const source = research.sources.find(s => s.id === id);
     if (!source) throw new Error(`不明な出典ID: ${id}`);
     used.add(id);
-    return `<a href="${escapeHtml(source.url)}">［${escapeHtml(source.title)}］</a>`;
+    const number = Number.parseInt(id.slice(1), 10);
+    return `<a href="#source-${id.toLowerCase()}" aria-label="参考資料${number}">［${number}］</a>`;
   });
   if (used.size < 2) throw new Error('本文に2件以上の出典を引用してください。');
   if (/\[\[|cite/.test(body)) throw new Error('未解決の引用表記があります。');
   return body + `<h2>参考資料</h2><p>参照日：${research.checkedAt}</p><ul>` +
     research.sources.filter(s => used.has(s.id)).map(s =>
-      `<li><a href="${escapeHtml(s.url)}">${escapeHtml(s.title)}</a></li>`).join('') + '</ul>';
+      `<li id="source-${s.id.toLowerCase()}"><strong>［${Number.parseInt(s.id.slice(1), 10)}］</strong> <a href="${escapeHtml(s.url)}">${escapeHtml(s.title)}</a></li>`).join('') + '</ul>';
 }
