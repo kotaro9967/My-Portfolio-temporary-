@@ -58,6 +58,8 @@ jobs:
       - name: Generate and save draft
         env:
           ARTICLE_VISUALS: 'true'
+          UMAMI_API_KEY: ${{ secrets.UMAMI_API_KEY }}
+          PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
           MICROCMS_REVIEWED_IMAGE_URL: ${{ vars.MICROCMS_REVIEWED_IMAGE_URL }}
           ARTICLE_KEYWORD: ${{ inputs.keyword }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -70,3 +72,13 @@ jobs:
             ARTICLE_KEYWORD="$(cat config/article-visual-trial.txt)"
           fi
           node scripts/generate-article.mjs "$ARTICLE_KEYWORD"
+
+      - name: Save measurement snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: article-measurements
+          path: .article-work/metrics/*.json
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: ignore

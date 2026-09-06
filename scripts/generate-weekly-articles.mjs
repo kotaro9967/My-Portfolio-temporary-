@@ -55,6 +55,7 @@ for (const keyword of keywords) {
     id: output.match(/microCMSへ下書き保存しました: (.+)/)?.[1]?.trim() || '',
     research: output.match(/リサーチ: (.+)/)?.[1]?.trim() || '',
     screenshots: output.match(/実画面撮影: (.+)/)?.[1]?.trim() || '',
+    metrics: [...output.matchAll(/計測素材: (.+)/g)].map(m => m[1].trim()),
     error: child.status === 0 ? '' : output.match(/ERROR: (.+)/)?.[1]?.trim() || '生成処理に失敗しました',
   });
 }
@@ -196,6 +197,7 @@ function buildSummary(results, currentConfig) {
     if (result.id) lines.push(`- microCMSコンテンツID：\`${result.id}\``);
     if (result.research) lines.push(`- 調査：${result.research}`);
     if (result.screenshots) lines.push(`- 実画面：${result.screenshots}（画像と説明も公開前に確認してください）`);
+    for (const metric of result.metrics) lines.push(`- 計測素材：${metric}`);
     if (result.error) lines.push(`- エラー：${result.error}`);
     lines.push('');
   });

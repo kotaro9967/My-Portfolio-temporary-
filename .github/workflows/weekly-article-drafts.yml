@@ -40,6 +40,8 @@ jobs:
       - name: Generate three article drafts
         env:
           ARTICLE_VISUALS: ${{ vars.ARTICLE_VISUALS || 'true' }}
+          UMAMI_API_KEY: ${{ secrets.UMAMI_API_KEY }}
+          PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
           MICROCMS_REVIEWED_IMAGE_URL: ${{ vars.MICROCMS_REVIEWED_IMAGE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-5-mini
@@ -50,6 +52,16 @@ jobs:
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           ARTICLE_SUMMARY_FILE: weekly-article-summary.md
         run: node scripts/generate-weekly-articles.mjs
+
+      - name: Save measurement snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: article-measurements
+          path: .article-work/metrics/*.json
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: ignore
 
       - name: Notify review request
         if: always()

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { attachArticleVisuals, insertVisualSection } from './article-visuals.mjs';
 import { researchArticle, addResearchCitations } from './article-research.mjs';
 import { attachLiveScreenshots } from './article-screenshots.mjs';
+import { attachMetrics } from './article-metrics.mjs';
 
 const brandProfile = JSON.parse(
   readFileSync(new URL('../config/article-brand-profile.json', import.meta.url), 'utf8')
@@ -77,6 +78,7 @@ if (process.env.ARTICLE_VISUALS === 'true') {
   catch (error) { fail(`実画面撮影に失敗しました: ${error.message}`); }
 }
 
+article = await attachMetrics(article, config);
 const created = await saveDraft(article, config);
 console.log(`記事タイトル: ${article.title}`);
 console.log(`対象キーワード: ${article.keyword}`);

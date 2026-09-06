@@ -6,6 +6,7 @@ on:
       - 'scripts/article-visuals*.mjs'
       - 'scripts/article-screenshots*.mjs'
       - 'scripts/article-research*.mjs'
+      - 'scripts/article-metrics*.mjs'
       - '.github/workflows/verify-article-visuals.yml'
 permissions:
   contents: read
@@ -24,7 +25,7 @@ jobs:
           npx playwright install --with-deps chromium
           sudo apt-get update
           sudo apt-get install -y fonts-noto-cjk
-      - run: node --test scripts/article-visuals.test.mjs scripts/article-screenshots.test.mjs scripts/article-research.test.mjs
+      - run: node --test scripts/article-visuals.test.mjs scripts/article-screenshots.test.mjs scripts/article-research.test.mjs scripts/article-metrics.test.mjs
         env:
           VISUAL_BROWSER_TEST: 'true'
       - uses: actions/upload-artifact@v4
