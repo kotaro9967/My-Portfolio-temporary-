@@ -41,3 +41,36 @@ test('bounded search request and API failure handling', async () => {
   });
   await assert.rejects(researchArticle('x', {}, async () => ({ ok: false, status: 429 })), /429/);
 });
+
+test('local government sources are accepted without allowing lookalikes', () => {
+  assert.ok(trustedSource('https://www.city.katsushika.lg.jp/business/a.html'));
+  assert.ok(trustedSource('https://www.sangyo-rodo.metro.tokyo.lg.jp/a'));
+  assert.equal(trustedSource('https://city.katsushika.lg.jp.evil.test/'), false);
+});
+test('one bounded follow-up merges evidence and remaps citation IDs', async () => {
+  let calls = 0;
+  const result = await researchArticle('葛飾区 町工場', { openaiApiKey: 'test', openaiModel: 'gpt-5-mini' }, async () => {
+    calls++;
+    const p = payload();
+    const part = p.output[1].content[0];
+    part.annotations = [part.annotations[0]];
+    part.text = 'One [a].';
+    if (calls === 2) part.annotations[0].url = 'https://www.city.katsushika.lg.jp/business/a.html';
+    p.usage = { input_tokens: 100, output_tokens: 50 };
+    return { ok: true, json: async () => p };
+  });
+  assert.equal(calls, 2);
+  assert.equal(result.sources.length, 2);
+  assert.match(result.notes, /\[\[S1\]\]/);
+  assert.match(result.notes, /\[\[S2\]\]/);
+  assert.equal(result.usage.input_tokens, 200);
+});
+test('repeated same source cannot satisfy two-source check and retry stops', async () => {
+  let calls = 0;
+  await assert.rejects(researchArticle('x', {}, async () => {
+    calls++;
+    const p = payload(); p.output[1].content[0].annotations.pop();
+    return { ok: true, json: async () => p };
+  }), /追加調査後/);
+  assert.equal(calls, 2);
+});
