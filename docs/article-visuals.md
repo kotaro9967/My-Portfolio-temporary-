@@ -15,7 +15,7 @@
 1. 現在の MICROCMS_API_KEY に、既存のコンテンツ作成権限に加えてマネジメントAPIの「メディアのアップロード」を設定してください。キー値を変更しなければGitHub Secretsの再登録は不要です。
 2. Verify article visuals が成功したら、Artifacts の sample-article-images で日本語と表示を確認できます。この検証はOpenAI・microCMSに通信せず、Netlifyも呼びません。
 3. Generate article draft をキーワード「採用ページ スマホ対応」で実行します。microCMSの下書きで3枚の画像と説明文を確認してください。
-4. 初回の画像付き下書き保存が成功した後、Repository variable `ARTICLE_VISUALS` を `true` に設定すると週次も画像付きになります。それまでは従来の本文のみの生成とレビュー通知を維持します。画像有効時にアップロードに失敗した記事は保存せず、週次通知は要確認になります。
+4. 画像付き下書きの通し確認が成功したため、週次も標準で画像付きです。Repository variable `ARTICLE_VISUALS` を `false` に設定すると本文のみの生成へ戻せます。既存のレビュー通知は維持します。画像有効時にアップロードに失敗した記事は保存せず、週次通知は要確認になります。
 
 初回の通し確認は `config/article-visual-trial.txt` の追加・変更で1記事起動します。このファイルを変えない通常のpushでは記事を生成しません。再度このファイルを変更する場合はAPI利用料が発生します。
 
