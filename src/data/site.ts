@@ -157,11 +157,18 @@ export const blog = {
 export const contact = {
   lead: 'ご相談・お見積りは無料です。まずはお気軽にご連絡ください。',
   links: [
-    { icon: 'icon_mail.png', label: site.emailLabel, href: `mailto:${site.email}` },
+    { icon: 'icon_mail.png', label: site.emailLabel, href: `mailto:${site.email}`, external: false },
     {
       icon: 'icon_linkedin.png',
       label: 'Kotaro Ozawa',
       href: 'https://www.linkedin.com/in/kotaro-ozawa-5b557b3ab/',
+      external: true,
+    },
+    {
+      icon: 'icon_code.png',
+      label: 'GitHub / kotaro9967',
+      href: 'https://github.com/kotaro9967',
+      external: true,
     },
   ],
 } as const;

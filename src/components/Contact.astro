@@ -50,7 +50,12 @@ const formEndpoint = import.meta.env.PUBLIC_FORM_ENDPOINT ?? '';
     <div class="card contact__links">
       {
         contact.links.map((link) => (
-          <a class="contact__link" href={link.href}>
+          <a
+            class="contact__link"
+            href={link.href}
+            target={link.external ? '_blank' : undefined}
+            rel={link.external ? 'noopener noreferrer' : undefined}
+          >
             <img src={`/assets/${link.icon}`} alt="" width="24" height="24" loading="lazy" />
             {link.label}
           </a>
