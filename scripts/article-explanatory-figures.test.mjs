@@ -17,9 +17,15 @@ test('does not invent an image when article has no useful figure', async () => {
   assert.equal(await attachExplanatoryFigures(article, {}), article);
 });
 test('selects only useful figures and limits images to two', () => {
-  const useful = '<figure><table><tr><td>比較</td></tr></table><figcaption>説明</figcaption></figure>';
+  const useful = '<figure><ol><li>相談</li><li>制作</li></ol><figcaption>工程図</figcaption></figure>';
   const body = '<figure><p>装飾のみ</p><figcaption>対象外</figcaption></figure>' + useful.repeat(3);
   const selected = selectExplanatoryFigures(body);
   assert.equal(selected.length, 2);
-  assert.ok(selected.every(figure => figure.includes('<table>')));
+  assert.ok(selected.every(figure => figure.includes('<ol>')));
+});
+test('tables including lists inside cells stay HTML without launching a browser or uploading', async () => {
+  const body = '<figure><table><tr><td><ol><li>項目</li></ol></td></tr></table><figcaption>比較表</figcaption></figure>';
+  const article = { body };
+  assert.deepEqual(selectExplanatoryFigures(body), []);
+  assert.equal(await attachExplanatoryFigures(article, {}), article);
 });

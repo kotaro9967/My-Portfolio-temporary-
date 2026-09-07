@@ -17,7 +17,8 @@ export function figureDocument(figure) {
 export function selectExplanatoryFigures(body) {
   const figures = [...body.matchAll(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi)].map(match => match[0]);
   return figures.filter(figure =>
-    /<(?:table|ol|ul)\b/i.test(figure) &&
+    !/<table\b/i.test(figure) &&
+    /<ol\b/i.test(figure) &&
     /<figcaption\b[^>]*>[\s\S]*?<\/figcaption>/i.test(figure)
   ).slice(0, 2);
 }
