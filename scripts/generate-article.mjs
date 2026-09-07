@@ -62,7 +62,7 @@ try { article.body = addResearchCitations(article.body, research); }
 catch (error) { fail(error.message); }
 validateArticle(article);
 if (process.env.ARTICLE_VISUALS === 'true') {
-  try { article = await attachExplanatoryFigures(article, config); }
+  try { article = await attachExplanatoryFigures(article, config, { research }); }
   catch (error) { fail(`説明図の作成に失敗しました: ${error.message}`); }
 }
 
@@ -84,8 +84,23 @@ async function generateArticle(inputKeyword, currentConfig, research) {
       category: { type: 'string' },
       targetAudience: { type: 'string' },
       body: { type: 'string' },
+      chart: {
+        type: 'object',
+        properties: {
+          enabled: { type: 'boolean' },
+          title: { type: 'string' },
+          type: { type: 'string', enum: ['bar'] },
+          labels: { type: 'array', items: { type: 'string' }, maxItems: 6 },
+          values: { type: 'array', items: { type: 'number' }, maxItems: 6 },
+          unit: { type: 'string' },
+          context: { type: 'string' },
+          sourceId: { type: 'string' },
+        },
+        required: ['enabled', 'title', 'type', 'labels', 'values', 'unit', 'context', 'sourceId'],
+        additionalProperties: false,
+      },
     },
-    required: ['title', 'slug', 'description', 'category', 'targetAudience', 'body'],
+    required: ['title', 'slug', 'description', 'category', 'targetAudience', 'body', 'chart'],
     additionalProperties: false,
   };
 
@@ -107,6 +122,7 @@ async function generateArticle(inputKeyword, currentConfig, research) {
         '使用可能なタグは h2, h3, p, ul, ol, li, strong, em, blockquote, a, br, hr, code, pre, table, thead, tbody, tr, th, td, figure, figcaption です。',
         '本文の理解や判断に役立つfigureを1〜2個、説明対象の段落の直後に入れてください。装飾や本文の単なる繰り返しは禁止です。比較表table（列は最大3、データ行は最大5）、手順ol（最大5段階）、判断基準ul（最大5項目）から適切な形式を選び、各セル・項目は80文字以内にしてください。figcaptionには「この図から何が分かるか」と出典IDを記載し、独自の提案なら「制作上の提案」と明記してください。図解が必要な具体的な疑問を本文で説明してください。',
         '根拠のない割合・件数・効果をグラフにしないでください。数値データがない場合は、工程図・比較表・チェックリストを使ってください。',
+        '調査メモに「グラフ候補:」として、同一条件で比較できる2〜6個の数値、ラベル、単位、対象・時点、出典IDが1行にそろっている場合だけchart.enabledをtrueにしてください。値はその行に記載された数値を改変せず使います。それ以外はenabled=false、labelsとvaluesを空配列、ほかの文字列を空にしてください。グラフ画像の日本語はコードで正確に描画します。',
         '画像URLは創作せず、imgタグは使わないでください。比較表tableとチェックリストulはHTMLのまま掲載します。工程図としてfigure内に置いたolのみ別処理で画像化します。普通の箇条書きや手順はfigureで囲まずHTMLで記載し、順序や流れを図解する価値がある場合だけ工程図にしてください。表と工程図は別のfigureに分けてください。Web画像の転載は行いません。根拠のある調査データは比較表にまとめ、対象・調査年・単位・条件・出典を省略しないでください。異なる条件の数字を単純比較せず、確認できなければ数字を使わないでください。',
         '本文末尾に「まとめ」のh2を置き、読者に自然な相談導線を示してください。',
         '以下のブランド情報は、記事テーマに関係する範囲だけ自然に使用してください。宣伝を過剰に繰り返さないでください。',
@@ -167,13 +183,14 @@ async function saveDraft(article, currentConfig) {
   );
   url.searchParams.set('status', 'draft');
 
+  const { chart: _chart, ...content } = article;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'X-MICROCMS-API-KEY': currentConfig.microCMSApiKey,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(article),
+    body: JSON.stringify(content),
   });
 
   return readJson(response, 'microCMS Content API');
