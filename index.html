@@ -2274,7 +2274,6 @@ class Component extends DCLogic {
     let sweepFinished = false;
     let originExtreme = 0;  // 最後に確定した静止状態。中途半端な時の戻り先
     let settleTimer = 0;
-    let recoveryTimer = 0;
 
     const lock = (on) => {
       const b = document.body, h = document.documentElement;
@@ -2339,7 +2338,6 @@ class Component extends DCLogic {
       phase = done === 1 ? 'open' : 'sheet';
       originExtreme = done;
       clearTimeout(settleTimer);
-      if (done === 1) clearTimeout(recoveryTimer);
       if (done === 1) {
         lock(false);
         root.style.display = 'none';
@@ -2493,21 +2491,19 @@ class Component extends DCLogic {
     window.addEventListener('keydown', onKey);
     window.addEventListener('resize', onPcResize);
 
-    if ((window.scrollY || 0) > 2 || window.location.hash) {
+    // Explicit section links bypass the cover; normal visits and #top start closed.
+    if (['#profile', '#skills', '#works', '#news', '#contact'].includes(window.location.hash)) {
       p = target = 1;
       apply(1);
       settle(1);
     } else {
       lock(true);
       apply(0);
-      // 入力処理で問題が起きてもスクロール固定を残さない。
-      recoveryTimer = window.setTimeout(() => snapTo(1), 6000);
     }
 
     this.destroyPageCurl = () => {
       cancelAnimationFrame(raf);
       clearTimeout(settleTimer);
-      clearTimeout(recoveryTimer);
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);

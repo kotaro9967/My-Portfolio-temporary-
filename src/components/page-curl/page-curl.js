@@ -75,7 +75,6 @@ export function initPageCurl(root, options = {}) {
   let sweepFinished = false; // めくり始めに一度だけ描画アニメを完了させたか
   let originExtreme = 0;     // 最後に確定した静止状態（0=閉 / 1=開）。中途半端な時の「戻り先」
   let settleTimer = 0;       // 入力が止まった後、力不足なら戻すためのタイマー
-  let recoveryTimer = 0;
 
   const lock = (on) => {
     if (!opt.lockScroll) return;
@@ -122,7 +121,6 @@ export function initPageCurl(root, options = {}) {
     phase = done === 1 ? 'open' : 'sheet';
     originExtreme = done;
     clearTimeout(settleTimer);
-    if (done === 1) clearTimeout(recoveryTimer);
     if (done === 1) {
       lock(false);
       root.style.display = 'none';
@@ -272,15 +270,13 @@ export function initPageCurl(root, options = {}) {
   window.addEventListener('keydown', onKey);
   window.addEventListener('resize', onResize);
 
-  if (window.scrollY > 2 || window.location.hash) {
+  if (['#profile', '#skills', '#works', '#news', '#contact'].includes(window.location.hash)) {
     p = target = 1;
     apply(1);
     settle(1);
   } else {
     lock(true);
     apply(0);
-    // 万一入力処理が途切れても、ページ全体を固定したままにしない。
-    recoveryTimer = window.setTimeout(() => snapTo(1), 6000);
   }
 
   return {
@@ -290,7 +286,6 @@ export function initPageCurl(root, options = {}) {
     destroy() {
       cancelAnimationFrame(raf);
       clearTimeout(settleTimer);
-      clearTimeout(recoveryTimer);
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
