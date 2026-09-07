@@ -36,6 +36,9 @@ import { site, nav } from '../data/site';
       document.documentElement.classList.toggle('nav-open', open);
     };
 
+    // bfcacheや途中遷移から戻った時に、古いスクロール固定を残さない。
+    setOpen(false);
+
     toggle.addEventListener('click', () => {
       setOpen(toggle.getAttribute('aria-expanded') !== 'true');
     });
@@ -58,5 +61,7 @@ import { site, nav } from '../data/site';
 
     const breakpoint = window.matchMedia('(max-width: 1000px)');
     breakpoint.addEventListener('change', () => setOpen(false));
+    window.addEventListener('pageshow', () => setOpen(false));
+    window.addEventListener('pagehide', () => setOpen(false));
   }
 </script>

@@ -17,11 +17,11 @@
  */
 
 const DEFAULTS = {
-  scrollDistance: 6000, // この px 分ホイール／スワイプすると完全にめくり切る（かなり重く・強く／長くスクロールし続けないと開かない）
+  scrollDistance: 700,
   smoothing: 0.1,       // 0-1。大きいほどスクロールへの追従が速い。低すぎると入力に対して常に遅れてカクつく／
                          // 「効いてない」感じになるため、重さは scrollDistance 側で出し、ここは滑らかな追従を優先
-  flickThreshold: 9000,  // 一回の入力量がこれ以上なら「強いスクロール」とみなして自動で最後までめくる（普通のホイール1クリックでは開かない強さ）
-  settleDelay: 40,     // 入力が止まってからこの時間、中途半端なら元の状態へ戻す (ms)。
+  flickThreshold: 40,
+  settleDelay: 180,
                          // 手を離したらすぐ戻る感触を優先して短くしている。トラックパッド／連続したホイール操作なら
                          // 毎回タイマーがリセットされ続けるので問題なく開ききれる
   idleCorner: 46,      // 静止時に折れている右下の三角の一辺 (px)
@@ -75,12 +75,16 @@ export function initPageCurl(root, options = {}) {
   let sweepFinished = false; // めくり始めに一度だけ描画アニメを完了させたか
   let originExtreme = 0;     // 最後に確定した静止状態（0=閉 / 1=開）。中途半端な時の「戻り先」
   let settleTimer = 0;       // 入力が止まった後、力不足なら戻すためのタイマー
+  let recoveryTimer = 0;
 
   const lock = (on) => {
     if (!opt.lockScroll) return;
     const b = document.body, h = document.documentElement;
-    if (on) { window.scrollTo(0, 0); b.style.overflow = 'hidden'; h.style.overflow = 'hidden'; }
-    else { b.style.overflow = ''; h.style.overflow = ''; }
+    // wheel/touch側のpreventDefaultで演出中の入力を制御する。
+    // overflowは変更せず、例外や履歴復元後にページ全体が固まる状態を作らない。
+    b.style.removeProperty('overflow');
+    h.style.removeProperty('overflow');
+    if (on) window.scrollTo(0, 0);
   };
 
   // 折れ線は x + y = c の直線。c を W+H-idle → 0 へ動かすだけで
@@ -118,6 +122,7 @@ export function initPageCurl(root, options = {}) {
     phase = done === 1 ? 'open' : 'sheet';
     originExtreme = done;
     clearTimeout(settleTimer);
+    if (done === 1) clearTimeout(recoveryTimer);
     if (done === 1) {
       lock(false);
       root.style.display = 'none';
@@ -267,8 +272,16 @@ export function initPageCurl(root, options = {}) {
   window.addEventListener('keydown', onKey);
   window.addEventListener('resize', onResize);
 
-  lock(true);
-  apply(0);
+  if (window.scrollY > 2 || window.location.hash) {
+    p = target = 1;
+    apply(1);
+    settle(1);
+  } else {
+    lock(true);
+    apply(0);
+    // 万一入力処理が途切れても、ページ全体を固定したままにしない。
+    recoveryTimer = window.setTimeout(() => snapTo(1), 6000);
+  }
 
   return {
     open: () => { finishSweepOnce(); target = 1; if (reduced) { p = 1; apply(1); settle(1); } else wake(); },
@@ -277,6 +290,7 @@ export function initPageCurl(root, options = {}) {
     destroy() {
       cancelAnimationFrame(raf);
       clearTimeout(settleTimer);
+      clearTimeout(recoveryTimer);
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);

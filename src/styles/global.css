@@ -1248,10 +1248,6 @@ textarea::placeholder {
 }
 
 @media (max-width: 1000px) {
-  html.nav-open,
-  html.nav-open body {
-    overflow: hidden;
-  }
   .nav {
     position: absolute;
     top: var(--header-h);
