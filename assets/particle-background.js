@@ -4,10 +4,10 @@
   const style = document.createElement('style');
   style.textContent = `
     body { isolation:isolate; }
-    .swarm-background { position:fixed; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(135deg,#edf3ff,#f0eaff); opacity:0; transition:opacity .8s ease; }
+    .swarm-background { position:fixed; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(135deg,#080f30,#21103e); opacity:0; transition:opacity .8s ease; }
     .swarm-background.is-visible { opacity:1; }
-    .swarm-background iframe { width:100%; height:100%; border:0; opacity:.52; pointer-events:none; mix-blend-mode:normal; }
-    body:has(.swarm-background) main { position:relative; z-index:1; background:rgba(251,251,254,.82); }
+    .swarm-background iframe { width:100%; height:100%; border:0; opacity:1; pointer-events:none; mix-blend-mode:normal; }
+    body:has(.swarm-background) main { position:relative; z-index:1; background:rgba(251,251,254,.78); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); }
     @media(prefers-reduced-motion:reduce) { .swarm-background { transition:none; } }
   `;
   document.head.append(style);
