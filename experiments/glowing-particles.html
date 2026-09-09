@@ -16,6 +16,69 @@
     </script>
 </head>
 <body>
+<canvas id="fallback" aria-label="青紫に光る粒子の背景" style="position:fixed;inset:0;width:100%;height:100%"></canvas>
+<p id="render-status" role="status" style="position:fixed;bottom:16px;left:16px;z-index:2;margin:0;padding:10px 14px;border-radius:12px;background:#ffffffd9;color:#44426a;font:13px sans-serif;pointer-events:none">粒子プレビュー · 軽量描画</p>
+<noscript>粒子を表示するにはJavaScriptを有効にしてください。</noscript>
+<script>
+(() => {
+  const canvas = document.getElementById('fallback');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) { document.getElementById('render-status').textContent = 'このブラウザではCanvas描画を利用できません。'; return; }
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let w, h, frame, active = true;
+  const sprites = [225, 260, 280].map(hue => {
+    const s = document.createElement('canvas'); s.width = s.height = 96;
+    const c = s.getContext('2d');
+    const glow = c.createRadialGradient(48,48,0,48,48,48);
+    glow.addColorStop(0,'rgba(255,255,255,1)');
+    glow.addColorStop(.10,'rgba(255,255,255,1)');
+    glow.addColorStop(.18,'hsla('+hue+',100%,78%,.98)');
+    glow.addColorStop(.32,'hsla('+hue+',95%,61%,.72)');
+    glow.addColorStop(.62,'hsla('+hue+',95%,64%,.22)');
+    glow.addColorStop(1,'hsla('+hue+',95%,64%,0)');
+    c.fillStyle=glow; c.fillRect(0,0,96,96); return s;
+  });
+  const particles = Array.from({length: innerWidth < 700 ? 160 : 360}, (_,i) => ({
+    x: Math.random(), y: Math.random(), size: 10+Math.pow(Math.random(),3)*66,
+    speed: 2+Math.random()*7, phase: Math.random()*Math.PI*2, sprite: sprites[i%3]
+  }));
+  function resize() {
+    w=innerWidth; h=innerHeight; const dpr=Math.min(devicePixelRatio||1,1.5);
+    canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    if(active) draw(performance.now());
+  }
+  function draw(ms) {
+    const t = reduced.matches ? 0 : ms/1000;
+    ctx.clearRect(0,0,w,h);
+    for(const p of particles) {
+      const x=(p.x*w + Math.sin(t*.12+p.phase)*22+w)%w;
+      const y=(p.y*h-t*p.speed%(h+100)+h+100)%(h+100)-50;
+      ctx.globalAlpha=.65+.35*Math.sin(t*.7+p.phase)**2;
+      ctx.drawImage(p.sprite,x-p.size/2,y-p.size/2,p.size,p.size);
+    }
+    ctx.globalAlpha=1;
+  }
+  function tick(ms) {
+    if(!active) return;
+    if(!document.hidden) draw(ms);
+    if(!reduced.matches) frame=requestAnimationFrame(tick);
+  }
+  window.stopParticleFallback = () => {
+    active=false; cancelAnimationFrame(frame); canvas.hidden=true;
+    document.getElementById('render-status').textContent='粒子プレビュー · WebGL描画';
+  };
+  window.startParticleFallback = () => {
+    if(active) return;
+    active=true; canvas.hidden=false;
+    document.getElementById('render-status').textContent='粒子プレビュー · 軽量描画';
+    tick(performance.now());
+  };
+  reduced.addEventListener('change',()=>{cancelAnimationFrame(frame);if(active)tick(performance.now());});
+  addEventListener('resize',resize);
+  resize(); tick(performance.now());
+})();
+</script>
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -39,7 +102,12 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.style.cssText = 'position:fixed;inset:0;visibility:hidden';
         document.body.appendChild(renderer.domElement);
+        renderer.domElement.addEventListener('webglcontextlost', () => {
+            renderer.domElement.style.visibility = 'hidden';
+            window.startParticleFallback();
+        });
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enabled = false;
@@ -51,7 +119,7 @@
         const composer = new EffectComposer(renderer);
         composer.addPass(new RenderPass(scene, camera));
         const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.strength = 1.65; bloomPass.radius = 0.7; bloomPass.threshold = 0.65;
+        bloomPass.strength = 1.65; bloomPass.radius = 0.7; bloomPass.threshold = 1.1;
         composer.addPass(bloomPass);
 
         // SWARM OBJECTS
@@ -326,6 +394,8 @@
             instancedMesh.instanceColor.needsUpdate = true;
 
             composer.render();
+            renderer.domElement.style.visibility = 'visible';
+            if (!document.getElementById('fallback').hidden) window.stopParticleFallback();
         }
         animate();
 
