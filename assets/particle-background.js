@@ -7,7 +7,10 @@
     .swarm-background { position:fixed; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(135deg,#080f30,#21103e); opacity:0; transition:opacity .8s ease; }
     .swarm-background.is-visible { opacity:1; }
     .swarm-background iframe { width:100%; height:100%; border:0; opacity:1; pointer-events:none; mix-blend-mode:normal; }
-    body:has(.swarm-background) main { position:relative; z-index:1; background:rgba(251,251,254,.78); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); }
+    body:has(.swarm-background) main { position:relative; z-index:1; background:transparent; }
+    body:has(.swarm-background.is-visible) main > section > div:not([aria-hidden="true"]),
+    body:has(.swarm-background.is-visible) main > section > form,
+    body:has(.swarm-background.is-visible) main > section[aria-label] { background:rgba(251,251,254,.86); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); border-radius:16px; box-shadow:0 0 24px 12px rgba(251,251,254,.50); }
     @media(prefers-reduced-motion:reduce) { .swarm-background { transition:none; } }
   `;
   document.head.append(style);
