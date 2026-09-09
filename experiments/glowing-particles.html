@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Particles Swarm Export</title>
-    <style>body { margin: 0; overflow: hidden; background: #080b24; }</style>
+    <title>青紫の粒子背景 — 実験用</title>
+    <meta name="robots" content="noindex, nofollow">
+    <style>body { margin: 0; overflow: hidden; background: #f3f1ff; }</style>
     <script type="importmap">
     {
         "imports": {
@@ -30,7 +31,7 @@
 
         // SETUP
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x080b24);
+        scene.background = new THREE.Color(0xf3f1ff);
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
         // Inside the particle sphere, matching the supplied close-up reference.
         camera.position.set(0, 0, 100);
