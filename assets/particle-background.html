@@ -50,7 +50,7 @@
         const composer = new EffectComposer(renderer);
         composer.addPass(new RenderPass(scene, camera));
         const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.strength = 0.18; bloomPass.radius = 0.4; bloomPass.threshold = 0;
+        bloomPass.strength = 0.85; bloomPass.radius = 0.55; bloomPass.threshold = 1.0;
         composer.addPass(bloomPass);
 
         // SWARM OBJECTS
@@ -79,7 +79,7 @@
             vec3 viewDir = vec3(0.0, 0.0, 1.0);
             float metallic = dot(vNormal, viewDir) * 0.5 + 0.5;
             metallic = pow(metallic, 3.0);
-            vec3 col = mix(vec3(0.1), vColor, 0.5) * metallic + vec3(0.2); 
+            vec3 col = vColor * (1.4 + metallic * 1.5); 
             gl_FragColor = vec4(col, 1.0);
         }
     `
@@ -323,7 +323,7 @@
             instancedMesh.instanceMatrix.needsUpdate = true;
             instancedMesh.instanceColor.needsUpdate = true;
 
-            renderer.render(scene, camera);
+            composer.render();
         }
         animate();
 
