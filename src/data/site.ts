@@ -143,7 +143,7 @@ export const skills = {
 } as const;
 
 export const works = {
-  lead: '現在掲載している内容は参考用のサンプルです。お客様から受託・納品した制作実績ではありません。',
+  lead: 'これまでに制作したWebサイトやデザインの一部をご紹介します。',
 } as const;
 
 export const news = {

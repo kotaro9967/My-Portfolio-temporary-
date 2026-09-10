@@ -997,7 +997,7 @@ body.portfolio-particles-visible .marquee-wrap{width:var(--particle-viewport-wid
           <h2 style="font-family: 'Quicksand',sans-serif; font-weight: 400; font-size: clamp(42px, 4.2vw, 62px); line-height: 1.05; color: #4f5ac7; margin: 0;">Recent Works</h2>
           <span class="mask-wipe" aria-hidden="true"></span>
         </div>
-        <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; text-wrap: pretty;">現在掲載している内容は参考用のサンプルです。お客様から受託・納品した制作実績ではありません。</p>
+        <p style="font-size: 15px; line-height: 2.05; color: #767c9c; margin: 0 0 32px; text-wrap: pretty;">これまでに制作したWebサイトやデザインの一部をご紹介します。</p>
         <a class="btn" href="/My-Portfolio-temporary-/works">
           VIEW ALL WORKS
           <span class="btn__arrow" aria-hidden="true"></span>
@@ -1705,8 +1705,8 @@ class Component extends DCLogic {
     const proxy = served ? Component.MICROCMS_PROXY : '';
     if (!proxy && !(served && domain && key)) return;
 
-    // まず Functions 経由。使えない環境（ローカルで素のサーバーを立てている等）だけ
-    // 直接続にフォールバックする。
+    // ビルド時に安全に書き出した公開データを最優先で読む。
+    // GitHub PagesでもNetlifyでもAPIキーをブラウザへ公開せず、同じ実データを表示できる。
     const get = (endpoint) => {
       const direct = () => {
         if (!domain || !key) throw new Error(endpoint + ': 取得先がありません');
@@ -1714,10 +1714,17 @@ class Component extends DCLogic {
           { headers: { 'X-MICROCMS-API-KEY': key } })
           .then((r) => { if (!r.ok) throw new Error(endpoint + ' ' + r.status); return r.json(); });
       };
-      if (!proxy) return direct();
-      return fetch(proxy + '?endpoint=' + endpoint)
-        .then((r) => { if (!r.ok) throw new Error('proxy ' + r.status); return r.json(); })
-        .catch(direct);
+      const proxyOrDirect = () => {
+        if (!proxy) return direct();
+        return fetch(proxy + '?endpoint=' + endpoint)
+          .then((r) => { if (!r.ok) throw new Error('proxy ' + r.status); return r.json(); })
+          .catch(direct);
+      };
+      const snapshotUrl = new URL('./assets/home-content.json', location.href);
+      return fetch(snapshotUrl)
+        .then((r) => { if (!r.ok) throw new Error('snapshot ' + r.status); return r.json(); })
+        .then((data) => ({ contents: Array.isArray(data[endpoint]) ? data[endpoint] : [] }))
+        .catch(proxyOrDirect);
     };
 
     get('works').then((d) => {

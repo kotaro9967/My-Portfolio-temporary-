@@ -33,10 +33,56 @@ if (process.env.GITHUB_PAGES !== 'true') {
 }
 const escape = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const preview = ['deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT ?? '');
-// Keep the original layout; distinguish template samples from paid client work.
-homeHtml = homeHtml
-  .replace(/これまでに制作したWebサイトやデザインの一部をご紹介します。/g,
-    '現在掲載している内容は参考用のサンプルです。お客様から受託・納品した制作実績ではありません。');
+
+const loadMicroCMSHomeContent = async () => {
+  const serviceDomain = process.env.MICROCMS_SERVICE_DOMAIN;
+  const apiKey = process.env.MICROCMS_API_KEY;
+  if (!serviceDomain || !apiKey) {
+    console.warn('CMS接続設定がないため、トップページ用データJSONの生成をスキップしました。');
+    return null;
+  }
+
+  const getPublished = async (endpoint) => {
+    const response = await fetch(`https://${serviceDomain}.microcms.io/api/v1/${endpoint}?limit=100`, {
+      headers: { 'X-MICROCMS-API-KEY': apiKey },
+    });
+    if (!response.ok) {
+      throw new Error(`microCMS ${endpoint} の取得に失敗しました (${response.status})`);
+    }
+    const payload = await response.json();
+    return (Array.isArray(payload.contents) ? payload.contents : []).filter((item) =>
+      item?.draft !== true &&
+      typeof item?.publishedAt === 'string' &&
+      Number.isFinite(Date.parse(item.publishedAt))
+    );
+  };
+
+  const [works, news] = await Promise.all([getPublished('works'), getPublished('news')]);
+  return {
+    generatedAt: new Date().toISOString(),
+    works: works.map((item) => ({
+      id: item.id,
+      title: item.title ?? '',
+      tag: item.tag ?? '',
+      category: item.category ?? '',
+      note: item.note ?? '',
+      image: item.image ?? null,
+      gradient: item.gradient ?? 'linear-gradient(150deg,#EDEFFB,#E4E8F9)',
+      order: item.order ?? 99,
+      featured: item.featured !== false,
+      externalUrl: item.externalUrl ?? '',
+      publishedAt: item.publishedAt,
+    })),
+    news: news.map((item) => ({
+      id: item.id,
+      title: item.title ?? '',
+      date: item.date ?? item.publishedAt,
+      category: item.category ?? 'NEWS',
+      summary: item.summary ?? '',
+      publishedAt: item.publishedAt,
+    })),
+  };
+};
 homeHtml = homeHtml.replace(/<html\b[^>]*>/i, '<html lang="ja">');
 homeHtml = homeHtml.replace(/<head>([\s\S]*?)<\/head>/i, (_, head) => {
   const cleaned = head.replace(/<title>[\s\S]*?<\/title>/gi, '')
@@ -73,6 +119,15 @@ await cp(resolve(projectRoot, 'assets'), resolve(outputDir, 'assets'), {
   recursive: true,
   force: true,
 });
+
+const homeContent = await loadMicroCMSHomeContent();
+if (homeContent) {
+  await writeFile(
+    resolve(outputDir, 'assets', 'home-content.json'),
+    JSON.stringify(homeContent)
+  );
+  console.log(`トップページ用にmicroCMSの実績 ${homeContent.works.length} 件・お知らせ ${homeContent.news.length} 件を書き出しました。`);
+}
 
 // Match sitemap URLs and canonical tags across production and Pages preview builds.
 for (const name of await readdir(outputDir)) {
