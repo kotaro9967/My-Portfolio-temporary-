@@ -6,11 +6,13 @@ import WorkCard from '../../components/WorkCard.astro';
 import { site } from '../../data/site';
 
 export const getStaticPaths = (async () => {
-  const entries = await getCollection('works', ({ data }) => !data.draft && !data.externalUrl);
+  const entries = await getCollection('works', ({ data }) => !data.draft);
   return entries.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
 }) satisfies GetStaticPaths;
 
 const { entry } = Astro.props;
+// Keep previously shared internal work URLs reachable for external projects.
+if (entry.data.externalUrl) return Astro.redirect(entry.data.externalUrl, 301);
 const { title, tag, category, image, gradient, role, period, stack, summary } = entry.data;
 const { Content } = await render(entry);
 
