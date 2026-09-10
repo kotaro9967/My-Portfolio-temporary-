@@ -26,7 +26,6 @@ const others = (await getCollection('works', ({ data, id }) => !data.draft && id
       <span class="text-reveal__inner">{title}</span>
       <span class="text-reveal__cover" aria-hidden="true"></span>
     </h1>
-    <p class="detail__summary"><strong>参考サンプル：お客様からの受託・納品実績ではありません。</strong>本文中の設定や期間は実案件の記録ではなく、成果を示すものではありません。</p>
     <p class="detail__summary">{summary}</p>
 
     <div class="detail__hero card" style={`background:${gradient}`}>
