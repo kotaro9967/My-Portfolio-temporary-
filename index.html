@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script data-cover-entry>
+  // Run before the page mounts so browser fragment/scroll restoration cannot skip the cover.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23fbfbfe'/><path d='M11 8v16M11 16l8-8M11 16l9 8' stroke='%234f5ac7' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
@@ -2556,15 +2562,28 @@ class Component extends DCLogic {
     window.addEventListener('keydown', onKey);
     window.addEventListener('resize', onPcResize);
 
-    // Explicit section links bypass the cover; normal visits and #top start closed.
-    if (['#profile', '#skills', '#works', '#news', '#contact'].includes(window.location.hash)) {
-      p = target = 1;
-      apply(1);
-      settle(1);
-    } else {
-      lock(true);
+    // Every new visit/reload starts with the cover, even after section navigation.
+    const resetCover = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      clearTimeout(settleTimer);
+      p = target = originExtreme = 0;
+      phase = 'sheet';
+      touching = false;
+      touchMoved = 0;
+      root.style.display = '';
+      document.body.classList.remove('portfolio-particles-visible');
+      document.querySelector('[data-hero-copy]')?.classList.remove('is-revealed');
+      if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+      if (this.lenis) this.lenis.scrollTo(0, { immediate: true, force: true });
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      settle(0);
       apply(0);
-    }
+    };
+    // Returning from another page can restore the entire open DOM from bfcache.
+    const onPageShow = (event) => { if (event.persisted) resetCover(); };
+    window.addEventListener('pageshow', onPageShow);
+    resetCover();
 
     this.destroyPageCurl = () => {
       cancelAnimationFrame(raf);
@@ -2577,6 +2596,7 @@ class Component extends DCLogic {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', onPcResize);
       lock(false);
+      window.removeEventListener('pageshow', onPageShow);
       flap.remove();
     };
   }
