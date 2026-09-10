@@ -7,6 +7,7 @@ import { seo, canonicalUrl } from '../config/seo.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const titles = new Set();
 const errors = [];
+const redirects = new Set();
 const files = (await htmlFiles(root)).filter((file) => {
   const path = relative(root, file).replaceAll('\\', '/');
   // 描画用iframeと実験ページは独立した検索ページではないためSEO検査・サイトマップ対象外。
@@ -17,6 +18,24 @@ for (const file of files) {
   const path = '/' + relative(root, file).replaceAll('\\', '/');
   const title = html.match(/<title>([^<]+)<\/title>/i)?.[1];
   const canonical = html.match(/<link\b[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1];
+  // Astro static redirects are forwarding documents, not content pages.
+  const refreshTag = [...html.matchAll(/<meta\b[^>]*>/gi)]
+    .map((match) => match[0])
+    .find((tag) => /http-equiv=["']refresh["']/i.test(tag));
+  if (refreshTag) {
+    const value = refreshTag.match(/content=["']([^"']+)["']/i)?.[1];
+    const target = value?.match(/^\s*\d+(?:\.\d+)?\s*;\s*url=(.+)$/i)?.[1]?.trim();
+    let valid = false;
+    try {
+      const url = new URL(target);
+      valid = ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password;
+    } catch {}
+    if (!valid || target !== canonical || !html.includes('href="' + target + '"')) {
+      errors.push(`${path}: invalid redirect destination or canonical`);
+    }
+    redirects.add(path);
+    continue;
+  }
   if (!title || titles.has(title)) errors.push(`${path}: missing/duplicate title`);
   titles.add(title);
   if (!/<meta\b[^>]*name="description"[^>]*content="[^"]+"/i.test(html)) errors.push(`${path}: missing description`);
@@ -42,7 +61,7 @@ assert.ok(!sitemap.includes('github.io'), 'Sitemap and canonical origins must ma
 assert.ok(sitemap.includes(canonicalUrl('/services/')), 'Service page missing from sitemap');
 for (const file of files) {
   const path = '/' + relative(root, file).replaceAll('\\', '/');
-  if (path !== '/404.html' && !sitemap.includes(canonicalUrl(path))) errors.push(`${path}: missing from sitemap`);
+  if (path !== '/404.html' && !redirects.has(path) && !sitemap.includes(canonicalUrl(path))) errors.push(`${path}: missing from sitemap`);
 }
 if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
 else console.log(`SEO checks passed: ${files.length} pages (titles, descriptions, canonicals, H1, language, JSON-LD, internal links, sitemap).`);
