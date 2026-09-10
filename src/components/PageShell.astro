@@ -33,7 +33,7 @@ const breadcrumbSchema = { '@context': 'https://schema.org', '@type': 'Breadcrum
 
     <Header />
 
-    <nav class="sec-nav" aria-label="ページ内セクション">
+    {path === '/' && <nav class="sec-nav" aria-label="ページ内セクション">
       {[
         ['01', 'PROFILE', 'profile'],
         ['02', 'SKILLS', 'skills'],
@@ -45,7 +45,7 @@ const breadcrumbSchema = { '@context': 'https://schema.org', '@type': 'Breadcrum
           <span>{number}</span><span class="sec-nav__label">{label}</span><i></i>
         </a>
       ))}
-    </nav>
+    </nav>}
 
     <main class="shell" id="top">
       {crumbs.length > 1 && <>
