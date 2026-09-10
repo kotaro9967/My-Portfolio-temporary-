@@ -1962,7 +1962,7 @@ class Component extends DCLogic {
   componentDidUpdate(prevProps, prevState) {
     // カルーセルの state 更新で点々を作り直すとワープするので、props 変更時のみ再構築
     if (prevProps !== this.props) this.build();
-    if (prevState.navOpen !== this.state.navOpen) {
+    if (prevState?.navOpen !== this.state.navOpen) {
       document.documentElement.classList.toggle('nav-open', this.state.navOpen);
     }
   }
