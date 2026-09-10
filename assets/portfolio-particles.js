@@ -21,10 +21,14 @@
     const profile=document.getElementById('profile');
     if(main&&profile){
       const viewportWidth=document.documentElement.clientWidth;
-      const mainLeft=main.getBoundingClientRect().left;
+      const mainRect=main.getBoundingClientRect();
+      const mainStyle=getComputedStyle(main);
+      const mainLeft=mainRect.left;
+      const mainContentLeft=mainLeft+(parseFloat(mainStyle.paddingLeft)||0);
       main.style.setProperty('--profile-blur-start',profile.offsetTop+'px');
       main.style.setProperty('--particle-viewport-width',viewportWidth+'px');
       main.style.setProperty('--particle-viewport-left',(-mainLeft)+'px');
+      main.style.setProperty('--particle-marquee-left',(-mainContentLeft)+'px');
     }
   };
   const schedule=()=>{if(!pending){pending=true;requestAnimationFrame(update);}};

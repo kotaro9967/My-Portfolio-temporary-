@@ -54,7 +54,12 @@ body.portfolio-particles-visible main::after{
  mask-image:linear-gradient(to bottom,transparent 0,#000 110px,#000 calc(100% - 80px),transparent 100%)
 }
 body.portfolio-particles-visible main>section~section :is(h1,h2,h3,p,div:has(> .mw-line))::before{content:none}
-body.portfolio-particles-visible .marquee-wrap{width:var(--particle-viewport-width,100%)!important;margin-left:var(--particle-viewport-left,0)!important;margin-right:0!important}
+body.portfolio-particles-visible .marquee-wrap{width:var(--particle-viewport-width,100%)!important;margin-left:var(--particle-marquee-left,var(--particle-viewport-left,0))!important;margin-right:0!important}
+@media(min-width:981px){
+  #profile>div:last-child{
+    transform:translateX(calc(-30px - clamp(12px,1.5vw,22px) - clamp(10px,1.3vw,22px)));
+  }
+}
 @media(prefers-reduced-motion:reduce){#portfolio-particle-bg{transition:none}}
 </style>
 <script defer src="assets/portfolio-particles.js"></script>
