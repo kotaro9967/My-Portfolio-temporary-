@@ -136,6 +136,20 @@ body.portfolio-particles-visible .marquee-wrap{width:var(--particle-viewport-wid
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json" data-site-seo>{"@context":"https://schema.org","@graph":[{"@type":"Person","@id":"https://kotaro.tokyo/#person","name":"小澤虎汰朗","alternateName":"Kotaro Ozawa","url":"https://kotaro.tokyo/about/","jobTitle":"Web制作者"},{"@type":"WebSite","@id":"https://kotaro.tokyo/#website","name":"小澤虎汰朗のホームページ制作","url":"https://kotaro.tokyo/","inLanguage":"ja","publisher":{"@id":"https://kotaro.tokyo/#person"}}]}</script>
+
+<style data-works-image-tone>
+  #works .wk-card img.wk-shot-inner {
+    filter: grayscale(1) sepia(.45) hue-rotate(185deg) saturate(1.3);
+    transition: filter .85s cubic-bezier(.2,.8,.2,1);
+  }
+  #works .wk-card:hover img.wk-shot-inner,
+  #works .wk-card:focus-visible img.wk-shot-inner {
+    filter: grayscale(0) sepia(0) hue-rotate(0deg) saturate(1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #works .wk-card img.wk-shot-inner { transition: none; }
+  }
+</style>
 </head>
 <body>
 <x-dc>
