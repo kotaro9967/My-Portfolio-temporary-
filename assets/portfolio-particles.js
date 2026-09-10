@@ -19,10 +19,17 @@
     document.body.classList.toggle('portfolio-particles-visible',ready);
     const main=document.querySelector('main');
     const profile=document.getElementById('profile');
-    if(main&&profile)main.style.setProperty('--profile-blur-start',profile.offsetTop+'px');
+    if(main&&profile){
+      const viewportWidth=document.documentElement.clientWidth;
+      const mainLeft=main.getBoundingClientRect().left;
+      main.style.setProperty('--profile-blur-start',profile.offsetTop+'px');
+      main.style.setProperty('--particle-viewport-width',viewportWidth+'px');
+      main.style.setProperty('--particle-viewport-left',(-mainLeft)+'px');
+    }
   };
   const schedule=()=>{if(!pending){pending=true;requestAnimationFrame(update);}};
   new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
   addEventListener('resize',schedule,{passive:true});
+  addEventListener('load',schedule,{once:true});
   update();
 })();

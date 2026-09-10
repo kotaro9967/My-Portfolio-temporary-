@@ -26,12 +26,13 @@ body.portfolio-particles-visible main :is(h1,h2,h3,p,div:has(> .mw-line))::befor
  mask-image:radial-gradient(ellipse at center,#000 25%,rgba(0,0,0,.75) 50%,transparent 74%)
 }
 body.portfolio-particles-visible main::after{
- content:"";position:absolute;top:var(--profile-blur-start,100vh);bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);z-index:-1;pointer-events:none;background:transparent;
+ content:"";position:absolute;top:var(--profile-blur-start,100vh);bottom:0;left:var(--particle-viewport-left,0);right:auto;width:var(--particle-viewport-width,100%);z-index:-1;pointer-events:none;background:transparent;
  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 110px,#000 calc(100% - 80px),transparent 100%);
  mask-image:linear-gradient(to bottom,transparent 0,#000 110px,#000 calc(100% - 80px),transparent 100%)
 }
 body.portfolio-particles-visible main>section~section :is(h1,h2,h3,p,div:has(> .mw-line))::before{content:none}
+body.portfolio-particles-visible .marquee-wrap{width:var(--particle-viewport-width,100%)!important;margin-left:var(--particle-viewport-left,0)!important;margin-right:0!important}
 @media(prefers-reduced-motion:reduce){#portfolio-particle-bg{transition:none}}
 </style>
 
