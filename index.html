@@ -56,8 +56,17 @@ body.portfolio-particles-visible main::after{
 body.portfolio-particles-visible main>section~section :is(h1,h2,h3,p,div:has(> .mw-line))::before{content:none}
 body.portfolio-particles-visible .marquee-wrap{width:var(--particle-viewport-width,100%)!important;margin-left:var(--particle-marquee-left,var(--particle-viewport-left,0))!important;margin-right:0!important}
 @media(min-width:981px){
-  #profile>div:last-child{
-    transform:translateX(calc(-5px - clamp(12px,1.5vw,22px) - clamp(10px,1.3vw,22px)));
+  main{
+    --section-shift:calc(5px + clamp(12px,1.5vw,22px) + clamp(10px,1.3vw,22px));
+    --section-content-inset:calc(84px + clamp(24px,3vw,44px) + clamp(20px,2.6vw,44px));
+  }
+  :is(#profile,#skills,#works,#news,#contact)>div:last-child{
+    transform:translateX(calc(-1 * var(--section-shift)));
+  }
+  main>section:has(> [data-hero-copy]),
+  main>section[aria-labelledby="service-overview-title"]{
+    margin-left:calc(var(--section-content-inset) - var(--section-shift));
+    margin-right:var(--section-shift);
   }
 }
 @media(prefers-reduced-motion:reduce){#portfolio-particle-bg{transition:none}}
