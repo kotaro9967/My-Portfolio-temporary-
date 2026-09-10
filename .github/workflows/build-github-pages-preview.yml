@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/build-github-pages-preview.yml'
-      - 'scripts/restore-legacy-home.mjs'
+      - 'scripts/**'
       - 'src/**'
       - 'public/**'
       - 'astro.config.mjs'
