@@ -7,7 +7,11 @@ import { seo, canonicalUrl } from '../config/seo.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const titles = new Set();
 const errors = [];
-const files = await htmlFiles(root);
+const files = (await htmlFiles(root)).filter((file) => {
+  const path = relative(root, file).replaceAll('\\', '/');
+  // 描画用iframeと実験ページは独立した検索ページではないためSEO検査・サイトマップ対象外。
+  return !path.startsWith('assets/') && !path.startsWith('experiments/');
+});
 for (const file of files) {
   const html = await readFile(file, 'utf8');
   const path = '/' + relative(root, file).replaceAll('\\', '/');
